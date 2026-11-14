@@ -1,0 +1,5 @@
+/home/nah/Projects/slimecrime-mp/server/target/release/build/num-traits/9013dfe7a2b2ae20/out/build_script_build.d: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/num-traits-0.2.19/build.rs
+
+/home/nah/Projects/slimecrime-mp/server/target/release/build/num-traits/9013dfe7a2b2ae20/out/build_script_build: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/num-traits-0.2.19/build.rs
+
+/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/num-traits-0.2.19/build.rs:

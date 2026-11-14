@@ -1,9 +1,26 @@
 class_name VerletSlime
 extends Node2D
 ## Simulates a soft ring using Verlet integration and an enclosed-area constraint.
+##
+## The local player's slime is simulated here. Other players' slimes
+## (`simulated = false`) run no physics and take the pose their owner sends.
 
 
 const SOLVER_PASSES: int = 8
+## Rim points in the network shape. Mirrors SHAPE_BYTES / 2 on the server.
+const SHAPE_POINTS: int = 32
+## Rim offsets are sent as signed bytes covering +-(radius * SHAPE_RANGE).
+const SHAPE_RANGE: float = 2.0
+## Half of the look sector (the face) a slime grabs with. Mirrors LOOK_HALF_ANGLE on the server.
+const LOOK_HALF_ANGLE: float = PI / 4.0
+
+## Emitted when another player's slime picks this one up.
+signal hold_started
+## Emitted when a networked hold on this slime ends (thrown, broke free, holder left).
+signal launched(pos: Vector2, vel: Vector2)
+
+## All networked slimes in the scene by identity hex.
+static var registry: Dictionary[String, VerletSlime] = {}
 
 @export_category("Components")
 @export var solid_body: StaticBody2D = null
@@ -11,6 +28,12 @@ const SOLVER_PASSES: int = 8
 
 @export_category("Settings")
 @export var body_color: Color = Color("#65d7bf")
+## false: no physics; the pose is set from outside with set_pose().
+@export var simulated: bool = true
+## Keeps the node itself on the ring's centre, so children (camera, label) follow.
+@export var follow_center: bool = false
+## Draws eyes at the look direction.
+@export var show_face: bool = false
 
 @export_category("Data")
 @export_range(8, 64) var point_count: int = 32:
@@ -31,7 +54,36 @@ const SOLVER_PASSES: int = 8
 @export_range(0.0, 1.0) var edge_strength: float = 0.5
 @export_range(0.01, 5000.0) var edge_boost_multiplier: float = 50.0
 @export_flags_2d_physics var terrain_mask: int = 1
+## Upward speed of a jump.
+@export var jump_strength: float = 400.0
+## Only matters between slimes: a heavy captive slows its carrier (and is thrown less far by the server).
+@export var weight: float = 1.0
+## Synced for display; the server applies it when this slime throws.
+@export var throw_strength: float = 780.0
 
+## Draw the look sector on the rim (the local player's slime).
+var show_sector: bool = false
+## Centre velocity, body rotation (the look direction) and angular speed.
+var velocity: Vector2 = Vector2.ZERO
+var angle: float = 0.0
+var spin: float = 0.0
+
+## Identity of the owning player; empty while offline.
+var net_identity: PackedByteArray = PackedByteArray()
+var net_id: String = ""
+## Identity hex of the slime holding this one / held by this one, or "".
+var held_by_id: String = ""
+var holding_id: String = ""
+## Where this slime sticks on its holder, in the holder's body frame.
+var hold_angle: float = 0.0
+## Shown above the slime; empty hides the label.
+var display_name: String = "":
+	set(value):
+		display_name = value
+		_update_label()
+
+var _launch_seq: int = -1 # -1: no server state seen yet
+var _label: Label = null
 var _held_slime: VerletSlime = null
 var _grab_offsets: PackedVector2Array = PackedVector2Array()
 var _holder: VerletSlime = null
@@ -62,12 +114,29 @@ func _ready() -> void:
 	_rest_area = _signed_area()
 	_rest_edge = _points[0].distance_to(_points[1])
 	_update_solid_outline()
+	_update_label()
+
+
+func _exit_tree() -> void:
+	if registry.get(net_id) == self:
+		registry.erase(net_id)
 
 
 func _physics_process(delta: float) -> void:
-	if is_instance_valid(_holder):
-		return
-	var carrying: bool = is_instance_valid(_held_slime)
+	_resolve_partners()
+	if is_held():
+		return # the holder carries this slime
+	if simulated:
+		_simulate(delta)
+		_measure_motion(delta)
+	if is_instance_valid(_held_slime):
+		if not net_id.is_empty():
+			_held_slime._stick_to(self)
+		_held_slime._carry_with(get_center(), angle)
+	_sync_node()
+
+
+func _simulate(delta: float) -> void:
 	_update_collision_exclusions()
 
 	_apply_contact_drive(_move_direction, delta)
@@ -86,8 +155,6 @@ func _physics_process(delta: float) -> void:
 		_solve_area()
 		_solve_terrain()
 	_sweep_starts.clear()
-	_update_solid_outline()
-	queue_redraw()
 
 
 func _draw() -> void:
@@ -98,9 +165,110 @@ func _draw() -> void:
 		outline = _open_hull(outline)
 	if outline.size() >= 3:
 		draw_colored_polygon(outline, body_color)
+	
+	var center: Vector2 = to_local(get_center())
+	if show_sector:
+		draw_arc(center, radius + 8.0, angle - LOOK_HALF_ANGLE, angle + LOOK_HALF_ANGLE, 12, Color(1, 1, 1, 0.3), 2.0, true)
+	if show_face:
+		# The face sits at the look direction and turns with the body.
+		var look: Vector2 = Vector2.from_angle(angle)
+		var side: Vector2 = look.orthogonal()
+		var face: Vector2 = center + look * radius * 0.5
+		var scale_factor: float = radius / 40.0
+		for eye_side: float in [-1.0, 1.0]:
+			var eye: Vector2 = face + side * eye_side * 12.0 * scale_factor
+			draw_circle(eye, 6.0 * scale_factor, Color("#f5fff5"), true, -1.0, true)
+			draw_circle(eye + look * 1.5 * scale_factor, 3.0 * scale_factor, body_color.darkened(0.7), true, -1.0, true)
 
 
 # -------------------------------- LOCAL FUNCTIONS ----------------------------------------
+
+
+## Networked slimes find their hold partners by identity; offline grabs set them directly.
+func _resolve_partners() -> void:
+	if net_id.is_empty():
+		return
+	_holder = registry.get(held_by_id)
+	_held_slime = registry.get(holding_id)
+
+
+## Updates velocity, angle and spin from the last simulation step.
+func _measure_motion(delta: float) -> void:
+	var center: Vector2 = get_center()
+	var travel: Vector2 = Vector2.ZERO
+	for index: int in point_count:
+		travel += _points[index] - _previous[index]
+	velocity = travel / (point_count * delta)
+	var angular_momentum: float = 0.0
+	var inertia: float = 0.0
+	for index: int in point_count:
+		var offset: Vector2 = _points[index] - center
+		angular_momentum += offset.cross((_points[index] - _previous[index]) / delta - velocity)
+		inertia += offset.length_squared()
+	spin = angular_momentum / maxf(inertia, 1.0)
+	angle = _ring_angle(center)
+
+
+## Brings the node, the solid outline and the drawing in line with the ring.
+func _sync_node() -> void:
+	if follow_center:
+		global_position = get_center()
+	_update_solid_outline()
+	queue_redraw()
+
+
+## Sets the grab offsets of a networked captive: resting on the holder's rim at hold_angle.
+func _stick_to(holder: VerletSlime) -> void:
+	var arm: Vector2 = Vector2.from_angle(hold_angle) * holder.hold_distance(self)
+	_grab_offsets.resize(point_count)
+	for index: int in point_count:
+		_grab_offsets[index] = arm + Vector2.from_angle(hold_angle + TAU * index / point_count) * radius
+
+
+## How much of its drive and jump a slime keeps while carrying another one.
+func _carry_factor() -> float:
+	if not is_instance_valid(_held_slime):
+		return 1.0
+	return weight / maxf(weight + _held_slime.weight, 0.001)
+
+
+func _has_ground_contact() -> bool:
+	var space: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+	for index: int in point_count:
+		var outward: Vector2 = _area_gradient(index).normalized()
+		if outward.is_zero_approx():
+			continue
+		var point: Vector2 = _points[index]
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(point, point + outward * 5.0, terrain_mask, _excluded_bodies)
+		var hit: Dictionary = space.intersect_ray(query)
+		if not hit.is_empty() and (hit.normal as Vector2).dot(Vector2.UP) > 0.45:
+			return true
+	return false
+
+
+func _resampled(points: PackedVector2Array, count: int) -> PackedVector2Array:
+	var old_count: int = points.size()
+	if old_count == count:
+		return points
+	var result: PackedVector2Array = PackedVector2Array()
+	for index: int in count:
+		var sample: float = float(index * old_count) / count
+		var first: int = floori(sample)
+		result.append(points[first].lerp(points[(first + 1) % old_count], sample - first))
+	return result
+
+
+func _update_label() -> void:
+	if _label == null:
+		if display_name.is_empty() or not is_inside_tree():
+			return
+		_label = Label.new()
+		_label.add_theme_font_size_override("font_size", 14)
+		_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_label.size = Vector2(200, 20)
+		add_child(_label)
+	_label.position = Vector2(-100, -radius - 40.0)
+	_label.text = display_name
 
 
 func _update_solid_outline() -> void:
@@ -167,7 +335,7 @@ func _apply_contact_drive(direction: float, delta: float) -> void:
 		var surface_normal: Vector2 = hit.normal
 		var tangent: Vector2 = Vector2(-outward.y, outward.x).slide(surface_normal)
 		# Grip holds part of the backward tread motion against the surface.
-		var drive: Vector2 = tangent * direction * drive_acceleration * delta * delta
+		var drive: Vector2 = tangent * direction * drive_acceleration * _carry_factor() * delta * delta
 		_previous[index] -= drive * 0.35
 		reaction -= drive / point_count
 	
@@ -228,12 +396,17 @@ func _ring_angle(center: Vector2) -> float:
 	return alignment.angle()
 
 
-func _carry_with(center: Vector2, angle: float) -> void:
+func _carry_with(center: Vector2, holder_angle: float) -> void:
+	if _grab_offsets.size() != point_count:
+		return
 	for index: int in point_count:
-		_points[index] = center + _grab_offsets[index].rotated(angle)
+		_points[index] = center + _grab_offsets[index].rotated(holder_angle)
 	_previous = _points.duplicate()
-	_update_solid_outline()
-	queue_redraw()
+	_clear_positions = _points.duplicate()
+	velocity = Vector2.ZERO
+	spin = 0.0
+	angle = _ring_angle(get_center())
+	_sync_node()
 
 
 func _restore_roundness(strength: float) -> void:
@@ -397,3 +570,130 @@ func get_center() -> Vector2:
 	for point: Vector2 in _points:
 		center += point
 	return center / point_count
+
+
+## Pushes off the ground. Returns false in the air or while held.
+func jump(strength: float = jump_strength) -> bool:
+	if is_held() or not _has_ground_contact():
+		return false
+	var kick: Vector2 = Vector2.UP * strength * _carry_factor() * get_physics_process_delta_time()
+	for index: int in point_count:
+		_previous[index] -= kick
+	return true
+
+
+## Moves the whole slime to `center` in its resting shape, moving at `new_velocity`.
+func teleport(center: Vector2, new_velocity: Vector2 = Vector2.ZERO) -> void:
+	var step: Vector2 = new_velocity * get_physics_process_delta_time()
+	for index: int in point_count:
+		_points[index] = center + Vector2.from_angle(angle + TAU * index / point_count) * radius
+		_previous[index] = _points[index] - step
+	_clear_positions = _points.duplicate()
+	velocity = new_velocity
+	spin = 0.0
+	_sync_node()
+
+
+## Poses a slime that is not simulated here. `rim` is in the body frame, relative to `center`.
+func set_pose(center: Vector2, new_angle: float, rim: PackedVector2Array) -> void:
+	if rim.is_empty():
+		return
+	angle = new_angle
+	var fitted: PackedVector2Array = _resampled(rim, point_count)
+	for index: int in point_count:
+		_points[index] = center + fitted[index].rotated(new_angle)
+	_previous = _points.duplicate()
+	_clear_positions = _points.duplicate()
+	_sync_node()
+
+
+## The rim as 2 signed bytes per point, in the body frame. Mirrors SHAPE_BYTES on the server.
+func pack_shape() -> PackedByteArray:
+	var center: Vector2 = get_center()
+	var rim: PackedVector2Array = _resampled(_points, SHAPE_POINTS)
+	var bytes: PackedByteArray = PackedByteArray()
+	bytes.resize(SHAPE_POINTS * 2)
+	var unit: float = 127.0 / (radius * SHAPE_RANGE)
+	for index: int in SHAPE_POINTS:
+		var offset: Vector2 = (rim[index] - center).rotated(-angle)
+		bytes.encode_s8(index * 2, clampi(roundi(offset.x * unit), -127, 127))
+		bytes.encode_s8(index * 2 + 1, clampi(roundi(offset.y * unit), -127, 127))
+	return bytes
+
+
+## Decodes pack_shape() output; an invalid array gives the resting ring.
+func unpack_shape(bytes: PackedByteArray) -> PackedVector2Array:
+	if bytes.size() != SHAPE_POINTS * 2:
+		return rest_shape()
+	var rim: PackedVector2Array = PackedVector2Array()
+	var unit: float = radius * SHAPE_RANGE / 127.0
+	for index: int in SHAPE_POINTS:
+		rim.append(Vector2(bytes.decode_s8(index * 2), bytes.decode_s8(index * 2 + 1)) * unit)
+	return rim
+
+
+## The resting ring in the body frame.
+func rest_shape() -> PackedVector2Array:
+	var rim: PackedVector2Array = PackedVector2Array()
+	for index: int in SHAPE_POINTS:
+		rim.append(Vector2.from_angle(TAU * index / SHAPE_POINTS) * radius)
+	return rim
+
+
+## Centre-to-centre distance at which `captive` sticks to this slime's rim.
+## Mirrors hold_distance() on the server.
+func hold_distance(captive: VerletSlime) -> float:
+	return radius + captive.radius
+
+
+## Where `captive` sits while this slime holds it.
+func hold_point(captive: VerletSlime) -> Vector2:
+	return get_center() + Vector2.from_angle(angle + captive.hold_angle) * hold_distance(captive)
+
+
+func set_identity(identity: PackedByteArray) -> void:
+	registry.erase(net_id)
+	net_identity = identity
+	net_id = identity.hex_encode()
+	registry[net_id] = self
+
+
+func is_held() -> bool:
+	return held_by_id != "" or is_instance_valid(_holder)
+
+
+## Applies the server-owned interaction row and emits hold_started / launched on changes.
+func apply_state(row: GameSlimeState) -> void:
+	var new_held: String = (row.held_by.unwrap() as PackedByteArray).hex_encode() if row.held_by.is_some() else ""
+	holding_id = (row.holding.unwrap() as PackedByteArray).hex_encode() if row.holding.is_some() else ""
+	hold_angle = row.hold_angle
+	var launched_now: bool = _launch_seq >= 0 and row.launch_seq != _launch_seq
+	_launch_seq = row.launch_seq
+	var started: bool = new_held != "" and new_held != held_by_id
+	held_by_id = new_held
+	_resolve_partners()
+	if started:
+		hold_started.emit()
+	if launched_now:
+		launched.emit(row.launch_pos, row.launch_vel)
+
+
+## Applies the server-owned parameters.
+func apply_stats(row: GameSlimeStats) -> void:
+	if not is_equal_approx(radius, row.size):
+		radius = row.size
+	weight = row.weight
+	drive_acceleration = row.rotation_speed
+	throw_strength = row.throw_strength
+	jump_strength = row.jump_strength
+	# Softness is the inverse of the rim's edge stiffness; a little stiffness keeps the ring intact.
+	edge_strength = maxf(1.0 - row.softness, 0.02)
+	_update_label()
+
+
+## Forget all server state, e.g. when the connection drops.
+func clear_state() -> void:
+	held_by_id = ""
+	holding_id = ""
+	_launch_seq = -1
+	_resolve_partners()

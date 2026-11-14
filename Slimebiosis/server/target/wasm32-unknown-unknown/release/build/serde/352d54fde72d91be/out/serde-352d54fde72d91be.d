@@ -1,0 +1,14 @@
+/home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/352d54fde72d91be/out/serde-352d54fde72d91be.d: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/8cf27b26821dcae5/out/private.rs
+
+/home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/352d54fde72d91be/out/libserde-352d54fde72d91be.rlib: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/8cf27b26821dcae5/out/private.rs
+
+/home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/352d54fde72d91be/out/libserde-352d54fde72d91be.rmeta: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/8cf27b26821dcae5/out/private.rs
+
+/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/8cf27b26821dcae5/out/private.rs:
+
+# env-dep:OUT_DIR=/home/nah/Projects/slimecrime-mp/server/target/wasm32-unknown-unknown/release/build/serde/8cf27b26821dcae5/out

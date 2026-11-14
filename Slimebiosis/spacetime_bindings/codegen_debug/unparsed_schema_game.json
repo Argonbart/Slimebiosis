@@ -1,0 +1,1300 @@
+{
+	"sections": [
+		{
+			"CaseConversionPolicy": {
+				"None": []
+			}
+		},
+		{
+			"Typespace": {
+				"types": [
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "name"
+									},
+									"algebraic_type": {
+										"String": []
+									}
+								},
+								{
+									"name": {
+										"some": "hue"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "connections"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "x"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "y"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "spawn_index"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "held_by"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "some"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__identity__"
+																	},
+																	"algebraic_type": {
+																		"U256": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "none"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": []
+														}
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "holding"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "some"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__identity__"
+																	},
+																	"algebraic_type": {
+																		"U256": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "none"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": []
+														}
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "held_since"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "hold_angle"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "launch_pos"
+									},
+									"algebraic_type": {
+										"Ref": 1.0
+									}
+								},
+								{
+									"name": {
+										"some": "launch_vel"
+									},
+									"algebraic_type": {
+										"Ref": 1.0
+									}
+								},
+								{
+									"name": {
+										"some": "launch_seq"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "weight"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "size"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "rotation_speed"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "throw_strength"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "jump_strength"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "softness"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "identity"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "pos"
+									},
+									"algebraic_type": {
+										"Ref": 1.0
+									}
+								},
+								{
+									"name": {
+										"some": "vel"
+									},
+									"algebraic_type": {
+										"Ref": 1.0
+									}
+								},
+								{
+									"name": {
+										"some": "angle"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "spin"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "shape"
+									},
+									"algebraic_type": {
+										"Array": {
+											"U8": []
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"Product": {
+							"elements": [
+								{
+									"name": {
+										"some": "id"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "owner"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__identity__"
+													},
+													"algebraic_type": {
+														"U256": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "pos"
+									},
+									"algebraic_type": {
+										"Ref": 1.0
+									}
+								},
+								{
+									"name": {
+										"some": "facing"
+									},
+									"algebraic_type": {
+										"I8": []
+									}
+								},
+								{
+									"name": {
+										"some": "mode"
+									},
+									"algebraic_type": {
+										"U8": []
+									}
+								},
+								{
+									"name": {
+										"some": "seq"
+									},
+									"algebraic_type": {
+										"U32": []
+									}
+								},
+								{
+									"name": {
+										"some": "held_by"
+									},
+									"algebraic_type": {
+										"Sum": {
+											"variants": [
+												{
+													"name": {
+														"some": "some"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": [
+																{
+																	"name": {
+																		"some": "__identity__"
+																	},
+																	"algebraic_type": {
+																		"U256": []
+																	}
+																}
+															]
+														}
+													}
+												},
+												{
+													"name": {
+														"some": "none"
+													},
+													"algebraic_type": {
+														"Product": {
+															"elements": []
+														}
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "at"
+									},
+									"algebraic_type": {
+										"Product": {
+											"elements": [
+												{
+													"name": {
+														"some": "__timestamp_micros_since_unix_epoch__"
+													},
+													"algebraic_type": {
+														"I64": []
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": {
+										"some": "angle"
+									},
+									"algebraic_type": {
+										"F32": []
+									}
+								},
+								{
+									"name": {
+										"some": "shape"
+									},
+									"algebraic_type": {
+										"Array": {
+											"U8": []
+										}
+									}
+								}
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"Types": [
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SlimeStats"
+					},
+					"ty": 3.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SlimeState"
+					},
+					"ty": 2.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "SlimeTransform"
+					},
+					"ty": 4.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TypeProbe"
+					},
+					"ty": 5.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Vector2"
+					},
+					"ty": 1.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Player"
+					},
+					"ty": 0.0,
+					"custom_ordering": true
+				}
+			]
+		},
+		{
+			"Tables": [
+				{
+					"source_name": "player",
+					"product_type_ref": 0.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "player_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "player_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "slime_state",
+					"product_type_ref": 2.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "slime_state_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "slime_state_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "type_probe",
+					"product_type_ref": 5.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "type_probe_id_idx_btree"
+							},
+							"accessor_name": {
+								"some": "id"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "type_probe_id_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "slime_stats",
+					"product_type_ref": 3.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "slime_stats_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "slime_stats_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "slime_transform",
+					"product_type_ref": 4.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "slime_transform_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "slime_transform_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				}
+			]
+		},
+		{
+			"Reducers": [
+				{
+					"source_name": "break_free",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "client_connected",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "client_disconnected",
+					"params": {
+						"elements": []
+					},
+					"visibility": {
+						"Private": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "grab",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "target"
+								},
+								"algebraic_type": {
+									"Product": {
+										"elements": [
+											{
+												"name": {
+													"some": "__identity__"
+												},
+												"algebraic_type": {
+													"U256": []
+												}
+											}
+										]
+									}
+								}
+							},
+							{
+								"name": {
+									"some": "attach_angle"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "probe",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "id"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 1.0
+								}
+							},
+							{
+								"name": {
+									"some": "facing"
+								},
+								"algebraic_type": {
+									"I8": []
+								}
+							},
+							{
+								"name": {
+									"some": "mode"
+								},
+								"algebraic_type": {
+									"U8": []
+								}
+							},
+							{
+								"name": {
+									"some": "seq"
+								},
+								"algebraic_type": {
+									"U32": []
+								}
+							},
+							{
+								"name": {
+									"some": "target"
+								},
+								"algebraic_type": {
+									"Product": {
+										"elements": [
+											{
+												"name": {
+													"some": "__identity__"
+												},
+												"algebraic_type": {
+													"U256": []
+												}
+											}
+										]
+									}
+								}
+							},
+							{
+								"name": {
+									"some": "held"
+								},
+								"algebraic_type": {
+									"Bool": []
+								}
+							},
+							{
+								"name": {
+									"some": "angle"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "shape"
+								},
+								"algebraic_type": {
+									"Array": {
+										"U8": []
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_name",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "name"
+								},
+								"algebraic_type": {
+									"String": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "set_stats",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "weight"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "size"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "rotation_speed"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "throw_strength"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "jump_strength"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "softness"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "throw_held",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "dir"
+								},
+								"algebraic_type": {
+									"Ref": 1.0
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				},
+				{
+					"source_name": "update_slime",
+					"params": {
+						"elements": [
+							{
+								"name": {
+									"some": "pos"
+								},
+								"algebraic_type": {
+									"Ref": 1.0
+								}
+							},
+							{
+								"name": {
+									"some": "vel"
+								},
+								"algebraic_type": {
+									"Ref": 1.0
+								}
+							},
+							{
+								"name": {
+									"some": "angle"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "spin"
+								},
+								"algebraic_type": {
+									"F32": []
+								}
+							},
+							{
+								"name": {
+									"some": "shape"
+								},
+								"algebraic_type": {
+									"Array": {
+										"U8": []
+									}
+								}
+							}
+						]
+					},
+					"visibility": {
+						"ClientCallable": []
+					},
+					"ok_return_type": {
+						"Product": {
+							"elements": []
+						}
+					},
+					"err_return_type": {
+						"String": []
+					}
+				}
+			]
+		},
+		{
+			"LifeCycleReducers": [
+				{
+					"lifecycle_spec": {
+						"OnConnect": []
+					},
+					"function_name": "client_connected"
+				},
+				{
+					"lifecycle_spec": {
+						"OnDisconnect": []
+					},
+					"function_name": "client_disconnected"
+				}
+			]
+		},
+		{
+			"ExplicitNames": {
+				"entries": [
+					{
+						"Table": {
+							"source_name": "player",
+							"canonical_name": "player"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "slime_state",
+							"canonical_name": "slime_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "type_probe",
+							"canonical_name": "type_probe"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "slime_stats",
+							"canonical_name": "slime_stats"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "slime_transform",
+							"canonical_name": "slime_transform"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "break_free",
+							"canonical_name": "break_free"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "client_connected",
+							"canonical_name": "client_connected"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "client_disconnected",
+							"canonical_name": "client_disconnected"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "grab",
+							"canonical_name": "grab"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "probe",
+							"canonical_name": "probe"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_name",
+							"canonical_name": "set_name"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "set_stats",
+							"canonical_name": "set_stats"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "throw_held",
+							"canonical_name": "throw_held"
+						}
+					},
+					{
+						"Function": {
+							"source_name": "update_slime",
+							"canonical_name": "update_slime"
+						}
+					}
+				]
+			}
+		}
+	]
+}
