@@ -7,6 +7,7 @@ extends Node2D
 @export_category("Components")
 @export var camera: Camera2D = null
 @export var slime: VerletSlime = null
+@export var thrown_slime: VerletSlime = null
 
 @export_category("Settings")
 @export var camera_min_x: float = 380.0
@@ -52,14 +53,20 @@ func _build_debug_menu() -> void:
 	
 	var rows: VBoxContainer = VBoxContainer.new()
 	panel.add_child(rows)
-	_add_slider(rows, "Point count", "point_count", 8.0, 64.0, 1.0, "More points give the edge finer contact with terrain and cost more to simulate.")
-	_add_slider(rows, "Movement speed", "drive_acceleration", 0.0, 5000.0, 50.0, "Higher values push harder against surfaces and build rolling speed faster.")
-	_add_slider(rows, "Size", "radius", 12.0, 100.0, 1.0, "Changes the target radius and area.")
-	_add_slider(rows, "Edge stiffness", "edge_strength", 0.0, 1.0, 0.01, "Higher values keep neighboring points closer to their resting distance.")
-	_add_slider(rows, "Edge boost (W)", "edge_boost_multiplier", 0.01, 50.0, 0.1, "Multiplies edge stiffness while you hold W.")
+	_add_slider(rows, "Points", "points", 8.0, 64.0, 1.0, "More points give finer contact with terrain.")
+	_add_slider(rows, "Size", "size", 12.0, 500.0, 1.0, "Changes the target size and area.")
+	_add_slider(rows, "Rigidity", "rigidity", 0.0, 1.0, 0.01, "Lower values let the slime squeeze and bend.")
+	_add_slider(rows, "Speed", "speed", 0.0, 5000.0, 50.0, "Higher values build rolling speed faster.")
+	_add_slider(rows, "Weight", "weight", 0.25, 4.0, 0.05, "How hard this slime is to rotate or throw when grabbed.")
+	if thrown_slime != null:
+		_add_slider(rows, "Held slime weight", "weight", 0.25, 4.0, 0.05, "Higher weight makes the held slime harder to rotate and throw.", thrown_slime)
+	_add_slider(rows, "Strength", "strength", 0.0, 1500.0, 10.0, "More strength helps rotate held slimes and throw them faster.")
 
 
-func _add_slider(rows: VBoxContainer, caption: String, property: StringName, minimum: float, maximum: float, step: float, help: String) -> void:
+func _add_slider(rows: VBoxContainer, caption: String, property: StringName, minimum: float, maximum: float, step: float, help: String, target: VerletSlime = null) -> void:
+	if target == null:
+		target = slime
+	
 	var label: Label = Label.new()
 	rows.add_child(label)
 	
@@ -67,11 +74,11 @@ func _add_slider(rows: VBoxContainer, caption: String, property: StringName, min
 	slider.min_value = minimum
 	slider.max_value = maximum
 	slider.step = step
-	slider.value = slime.get(property)
+	slider.value = target.get(property)
 	slider.focus_mode = Control.FOCUS_NONE
 	rows.add_child(slider)
 	label.text = "%s  %s" % [caption, slider.value]
-	slider.value_changed.connect(_update_setting.bind(property, caption, label))
+	slider.value_changed.connect(_update_setting.bind(target, property, caption, label))
 	
 	var description: Label = Label.new()
 	description.text = help
@@ -80,9 +87,9 @@ func _add_slider(rows: VBoxContainer, caption: String, property: StringName, min
 	rows.add_child(description)
 
 
-func _update_setting(value: float, property: StringName, caption: String, label: Label) -> void:
-	if property == &"point_count":
-		slime.point_count = int(value)
+func _update_setting(value: float, target: VerletSlime, property: StringName, caption: String, label: Label) -> void:
+	if property == &"points":
+		target.points = int(value)
 	else:
-		slime.set(property, value)
+		target.set(property, value)
 	label.text = "%s  %s" % [caption, value]
