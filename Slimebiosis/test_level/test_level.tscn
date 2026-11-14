@@ -2,13 +2,12 @@
 
 [ext_resource type="Script" uid="uid://mcijm5qjy2e" path="res://test_level/test_level.gd" id="1_866p8"]
 [ext_resource type="PackedScene" uid="uid://dpk4hswvugagd" path="res://slime/slime.tscn" id="2_o12yy"]
-[ext_resource type="PackedScene" path="res://slime_npc/slime_npc.tscn" id="3_5dngq"]
+[ext_resource type="Script" uid="uid://diemkkhvd4gb" path="res://slime/slime_controller.gd" id="3_controller"]
 
-[node name="TestLevel" type="Node2D" unique_id=461453500 node_paths=PackedStringArray("camera", "slime", "npc_slime")]
+[node name="TestLevel" type="Node2D" unique_id=461453500 node_paths=PackedStringArray("camera", "slime")]
 script = ExtResource("1_866p8")
 camera = NodePath("VerletSlime/Camera")
 slime = NodePath("VerletSlime")
-npc_slime = NodePath("SlimeNPC")
 camera_min_x = 100.0
 camera_max_x = 5100.0
 follow_elevation = true
@@ -29,5 +28,7 @@ position = Vector2(100, 420)
 zoom = Vector2(0.98, 0.98)
 position_smoothing_enabled = true
 
-[node name="SlimeNPC" parent="." unique_id=1958675254 instance=ExtResource("3_5dngq")]
-position = Vector2(-171, 186)
+[node name="WASDController" type="Node" parent="VerletSlime" unique_id=642132042 node_paths=PackedStringArray("slime")]
+process_physics_priority = -1
+script = ExtResource("3_controller")
+slime = NodePath("..")

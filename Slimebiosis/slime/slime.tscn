@@ -10,4 +10,3 @@ solid_outline = NodePath("SolidBody/Outline")
 [node name="SolidBody" type="StaticBody2D" parent="." unique_id=543482830]
 
 [node name="Outline" type="CollisionShape2D" parent="SolidBody" unique_id=1180736607]
-

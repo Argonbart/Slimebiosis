@@ -11,9 +11,6 @@ const SOLVER_PASSES: int = 8
 
 @export_category("Settings")
 @export var body_color: Color = Color("#65d7bf")
-@export var move_left_key: Key = KEY_A
-@export var move_right_key: Key = KEY_D
-@export var edge_boost_key: Key = KEY_W
 
 @export_category("Data")
 @export_range(8, 64) var point_count: int = 32:
@@ -31,10 +28,12 @@ const SOLVER_PASSES: int = 8
 		radius = value
 		_rest_edge *= ratio
 		_rest_area *= ratio * ratio
-@export_range(0.0, 1.0) var edge_strength: float = 0.3
+@export_range(0.0, 1.0) var edge_strength: float = 0.5
 @export_range(0.01, 5000.0) var edge_boost_multiplier: float = 50.0
 @export_flags_2d_physics var terrain_mask: int = 1
 
+var _move_direction: float = 0.0
+var _boosting: bool = false
 var _excluded_bodies: Array[RID] = []
 var _points: PackedVector2Array = PackedVector2Array()
 var _previous: PackedVector2Array = PackedVector2Array()
@@ -64,12 +63,13 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_collision_exclusions()
-	var direction: float = float(Input.is_physical_key_pressed(move_right_key)) - float(Input.is_physical_key_pressed(move_left_key))
-	_apply_contact_drive(direction, delta)
+
+	_apply_contact_drive(_move_direction, delta)
 	_sweep_starts = _points.duplicate()
 	_integrate(delta)
 	var strength: float = edge_strength
-	if Input.is_physical_key_pressed(edge_boost_key):
+	var boosting: bool = _boosting
+	if boosting:
 		strength *= edge_boost_multiplier
 	var edge_passes: int = maxi(1, ceili(strength))
 	_solve_terrain()
@@ -206,6 +206,21 @@ func _solve_area() -> void:
 		_points[index] += correction
 
 
+func _restore_roundness(strength: float) -> void:
+	var center: Vector2 = get_center()
+	var alignment: Vector2 = Vector2.ZERO
+	for index: int in point_count:
+		var rest: Vector2 = Vector2.from_angle(TAU * index / point_count)
+		var offset: Vector2 = _points[index] - center
+		alignment += Vector2(rest.dot(offset), rest.cross(offset))
+	
+	var angle: float = alignment.angle()
+	var correction: float = 0.65 * strength / (1.0 + strength)
+	for index: int in point_count:
+		var target: Vector2 = center + Vector2.from_angle(angle + TAU * index / point_count) * radius
+		_points[index] = _points[index].lerp(target, correction)
+
+
 func _solve_edges(strength: float) -> void:
 	for index: int in point_count:
 		var next: int = (index + 1) % point_count
@@ -313,6 +328,11 @@ func _recover_point(point: Vector2, space: PhysicsDirectSpaceState2D, overlap: P
 
 
 # -------------------------------- EXTERNAL FUNCTIONS ----------------------------------------
+
+
+func set_controls(direction: float, boosting: bool) -> void:
+	_move_direction = direction
+	_boosting = boosting
 
 
 func get_center() -> Vector2:
