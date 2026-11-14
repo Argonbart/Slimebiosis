@@ -19,7 +19,7 @@ func _ready() -> void:
 	local_slime = SLIME.instantiate()
 	local_slime.name = "LocalSlime"
 	local_slime.position = spawn_position(0)
-	local_slime.radius = SlimeSpawner.DEFAULT_RADIUS
+	local_slime.size = SlimeSpawner.DEFAULT_RADIUS
 	local_slime.follow_center = true
 	local_slime.show_face = true
 	local_slime.add_child(LocalController.new())

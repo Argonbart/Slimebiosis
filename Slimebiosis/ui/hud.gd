@@ -5,12 +5,12 @@ class_name Hud extends CanvasLayer
 ## Slider rows: caption, slime_stats column, min, max, step, description.
 ## The ranges mirror the *_RANGE constants on the server.
 const STATS: Array[Array] = [
-	["Weight", "weight", 0.2, 5.0, 0.1, "Heavy slimes are thrown less far and slow down whoever carries them."],
-	["Size", "size", 24.0, 100.0, 1.0, "Radius of the body."],
-	["Rotation speed", "rotation_speed", 500.0, 10000.0, 50.0, "Higher values push harder against surfaces and build rolling speed faster."],
-	["Throw strength", "throw_strength", 100.0, 2000.0, 10.0, "Launch speed of a slime you throw (divided by its weight)."],
-	["Jump strength", "jump_strength", 100.0, 1000.0, 5.0, "How hard the slime pushes off the ground."],
-	["Softness", "softness", 0.0, 1.0, 0.01, "Soft slimes squash and wobble; stiff ones keep their round shape."],
+	["Points", "points", 8.0, 64.0, 1.0, "More points give finer contact with terrain."],
+	["Size", "size", 12.0, 500.0, 1.0, "Changes the target size and area."],
+	["Rigidity", "rigidity", 0.0, 1.0, 0.01, "Lower values let the slime squeeze and bend."],
+	["Speed", "speed", 0.0, 5000.0, 50.0, "Higher values build rolling speed faster."],
+	["Weight", "weight", 0.25, 4.0, 0.05, "How hard this slime is to carry or throw when grabbed."],
+	["Strength", "strength", 0.0, 1500.0, 10.0, "More strength helps carry held slimes and throw them faster."],
 ]
 ## Slider changes are sent at most this often while dragging.
 const STATS_SEND_INTERVAL := 0.1
@@ -133,8 +133,8 @@ func _process(delta: float) -> void:
 	if _stats_dirty and _stats_timer >= STATS_SEND_INTERVAL:
 		_stats_timer = 0.0
 		_stats_dirty = false
-		Net.set_stats(_sliders["weight"].value, _sliders["size"].value, _sliders["rotation_speed"].value,
-			_sliders["throw_strength"].value, _sliders["jump_strength"].value, _sliders["softness"].value)
+		Net.set_stats(int(_sliders["points"].value), _sliders["size"].value, _sliders["rigidity"].value,
+			_sliders["speed"].value, _sliders["weight"].value, _sliders["strength"].value)
 	if not _debug.visible:
 		return
 	var lines: PackedStringArray = []

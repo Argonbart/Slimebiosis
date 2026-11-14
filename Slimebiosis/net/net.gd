@@ -224,10 +224,10 @@ func _process(delta: float) -> void:
 
 ## Debug tuning of our own slime; the server clamps the values and the result
 ## comes back through stats_changed.
-func set_stats(weight: float, size: float, rotation_speed: float, throw_strength: float, jump_strength: float, softness: float) -> SpacetimeDBReducerCall:
+func set_stats(points: int, size: float, rigidity: float, speed: float, weight: float, strength: float) -> SpacetimeDBReducerCall:
 	if not (is_ready and game.is_connected_db()):
 		return null
-	return game.reducers.set_stats(weight, size, rotation_speed, throw_strength, jump_strength, softness)
+	return game.reducers.set_stats(points, size, rigidity, speed, weight, strength)
 
 func set_player_name(new_name: String) -> void:
 	if not (is_ready and game.is_connected_db()):

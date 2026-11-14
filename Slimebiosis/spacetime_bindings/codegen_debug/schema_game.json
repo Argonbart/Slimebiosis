@@ -122,9 +122,9 @@
 					"godot_type_hint": "PackedByteArray"
 				},
 				{
-					"name": "weight",
-					"type": "F32",
-					"godot_type_hint": "float"
+					"name": "points",
+					"type": "U32",
+					"godot_type_hint": "int"
 				},
 				{
 					"name": "size",
@@ -132,22 +132,22 @@
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "rotation_speed",
+					"name": "rigidity",
 					"type": "F32",
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "throw_strength",
+					"name": "speed",
 					"type": "F32",
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "jump_strength",
+					"name": "weight",
 					"type": "F32",
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "softness",
+					"name": "strength",
 					"type": "F32",
 					"godot_type_hint": "float"
 				}
@@ -374,9 +374,9 @@
 			"source_name": "set_stats",
 			"params": [
 				{
-					"name": "weight",
-					"type": "F32",
-					"godot_type_hint": "float"
+					"name": "points",
+					"type": "U32",
+					"godot_type_hint": "int"
 				},
 				{
 					"name": "size",
@@ -384,22 +384,22 @@
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "rotation_speed",
+					"name": "rigidity",
 					"type": "F32",
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "throw_strength",
+					"name": "speed",
 					"type": "F32",
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "jump_strength",
+					"name": "weight",
 					"type": "F32",
 					"godot_type_hint": "float"
 				},
 				{
-					"name": "softness",
+					"name": "strength",
 					"type": "F32",
 					"godot_type_hint": "float"
 				}
@@ -460,8 +460,8 @@
 	"procedures": [],
 	"tables": [
 		{
-			"name": "game_player",
-			"type_idx": 0,
+			"name": "game_slime_stats",
+			"type_idx": 3,
 			"primary_key": 0,
 			"primary_key_name": "identity",
 			"unique_indexes": [
@@ -469,23 +469,7 @@
 					"name": "identity",
 					"type": "__identity__",
 					"godot_type_hint": "PackedByteArray",
-					"constraint_name": "player_identity_key"
-				}
-			],
-			"is_public": true,
-			"is_event": false
-		},
-		{
-			"name": "game_slime_state",
-			"type_idx": 2,
-			"primary_key": 0,
-			"primary_key_name": "identity",
-			"unique_indexes": [
-				{
-					"name": "identity",
-					"type": "__identity__",
-					"godot_type_hint": "PackedByteArray",
-					"constraint_name": "slime_state_identity_key"
+					"constraint_name": "slime_stats_identity_key"
 				}
 			],
 			"is_public": true,
@@ -508,8 +492,8 @@
 			"is_event": false
 		},
 		{
-			"name": "game_slime_stats",
-			"type_idx": 3,
+			"name": "game_slime_state",
+			"type_idx": 2,
 			"primary_key": 0,
 			"primary_key_name": "identity",
 			"unique_indexes": [
@@ -517,7 +501,23 @@
 					"name": "identity",
 					"type": "__identity__",
 					"godot_type_hint": "PackedByteArray",
-					"constraint_name": "slime_stats_identity_key"
+					"constraint_name": "slime_state_identity_key"
+				}
+			],
+			"is_public": true,
+			"is_event": false
+		},
+		{
+			"name": "game_player",
+			"type_idx": 0,
+			"primary_key": 0,
+			"primary_key_name": "identity",
+			"unique_indexes": [
+				{
+					"name": "identity",
+					"type": "__identity__",
+					"godot_type_hint": "PackedByteArray",
+					"constraint_name": "player_identity_key"
 				}
 			],
 			"is_public": true,

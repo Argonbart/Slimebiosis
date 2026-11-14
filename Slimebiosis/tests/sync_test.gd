@@ -64,8 +64,8 @@ func _run() -> void:
 	_check(Net.local_state() != null, "A should have a slime_state row")
 	_check(not a_slime.display_name.is_empty(), "A's slime should show its player name")
 	_check(Net.stats.has(Net.local_id), "A should have a slime_stats row")
-	_check(a_slime.radius == 40.0 and a_slime.drive_acceleration == 5000.0 and a_slime.jump_strength == 400.0
-		and a_slime.weight == 1.0 and a_slime.throw_strength == 780.0 and a_slime.edge_strength == 0.5,
+	_check(a_slime.points == 32 and a_slime.size == 40.0 and a_slime.rigidity == 0.5 and a_slime.speed == 5000.0
+		and a_slime.weight == 1.0 and a_slime.strength == 420.0,
 		"A's slime takes its parameters from slime_stats")
 
 	# --- client B: a bare module client
@@ -116,7 +116,7 @@ func _run() -> void:
 	if spawner.puppets.has(b_id):
 		var puppet: VerletSlime = spawner.puppets[b_id]
 		_check(not puppet.simulated, "remote slimes are not simulated")
-		_check(puppet.radius == 40.0, "puppet takes its radius from slime_stats")
+		_check(puppet.size == 40.0, "puppet takes its size from slime_stats")
 		await _until(func() -> bool: return puppet.position.distance_to(p) < 1.0 and absf(angle_difference(puppet.angle, 2.5)) < 0.01,
 			"puppet settles at B's last position and rotation")
 		_check(puppet.pack_shape() == shape, "puppet shows the shape B sent")
@@ -127,23 +127,24 @@ func _run() -> void:
 		await _until(func() -> bool: return puppet.display_name == "Bob", "rename reaches A's puppet")
 
 		# --- debug tuning: B resizes itself, A's puppet of B follows
-		b.reducers.set_stats(1.0, 60.0, 5000.0, 780.0, 400.0, 0.5)
-		await _until(func() -> bool: return puppet.radius == 60.0, "B's new radius reaches A's puppet")
+		b.reducers.set_stats(32, 60.0, 0.5, 5000.0, 1.0, 420.0)
+		await _until(func() -> bool: return puppet.size == 60.0, "B's new size reaches A's puppet")
 
 	# --- debug tuning of the own slime, as the HUD sliders do it; out-of-range values are clamped
-	Net.set_stats(2.5, 52.0, 7000.0, 1200.0, 5000.0, -3.0)
-	await _until(func() -> bool: return a_slime.radius == 52.0, "A's slime takes the new radius")
+	Net.set_stats(200, 52.0, -3.0, 3500.0, 2.5, 900.0)
+	await _until(func() -> bool: return a_slime.size == 52.0, "A's slime takes the new size")
+	_check(a_slime.points == 64, "points are clamped to the maximum, got %d" % a_slime.points)
+	_check(a_slime.rigidity == 0.0, "rigidity is clamped to the minimum, got %.2f" % a_slime.rigidity)
+	_check(a_slime.speed == 3500.0, "A's speed changed, got %.1f" % a_slime.speed)
 	_check(a_slime.weight == 2.5, "A's weight changed, got %.1f" % a_slime.weight)
-	_check(a_slime.drive_acceleration == 7000.0, "A's rotation speed changed, got %.1f" % a_slime.drive_acceleration)
-	_check(a_slime.jump_strength == 1000.0, "jump is clamped to the maximum, got %.1f" % a_slime.jump_strength)
-	_check(a_slime.edge_strength == 1.0, "softness is clamped to the minimum (a stiff rim), got %.2f" % a_slime.edge_strength)
+	_check(a_slime.pack_shape().size() == 64, "the sent shape keeps 32 points whatever the rim has")
 	var a_stats: GameSlimeStats = b.db.slime_stats.identity.find(Net.local_identity)
-	_check(a_stats != null and a_stats.throw_strength == 1200.0, "B sees A's new throw strength")
+	_check(a_stats != null and a_stats.strength == 900.0, "B sees A's new strength")
 	var hud: Hud = sandbox.find_children("*", "", false, false).filter(func(n: Node) -> bool: return n is Hud)[0]
 	_check(hud._sliders["size"].value == 52.0 and hud._sliders["size"].editable, "the size slider follows the server row")
-	hud._sliders["rotation_speed"].value = 3000.0 # as if dragged
-	await _until(func() -> bool: return a_slime.drive_acceleration == 3000.0, "moving a slider changes the slime")
-	_check(a_slime.radius == 52.0, "the other parameters stay as they were")
+	hud._sliders["rigidity"].value = 0.5 # as if dragged
+	await _until(func() -> bool: return a_slime.rigidity == 0.5, "moving a slider changes the slime")
+	_check(a_slime.size == 52.0, "the other parameters stay as they were")
 	for i in 90: # the bigger body settles without falling apart
 		await get_tree().physics_frame
 	_check(a_slime.position.y < 1800.0 and a_slime.position.y > 1800.0 - 52.0 * 1.3, "resized slime rests on the ground, y %.1f" % a_slime.position.y)

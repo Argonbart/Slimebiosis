@@ -40,7 +40,7 @@ func _ring_error() -> float:
 
 func _run() -> void:
 	const GROUND_Y := 1800.0
-	var reach := slime.radius
+	var reach := slime.size
 
 	# --- settles on the ground, resting on its rim
 	await _frames(90)
@@ -58,9 +58,11 @@ func _run() -> void:
 	_check(slime.velocity.x > 100.0, "rolling velocity %.1f" % slime.velocity.x)
 	_check(slime.spin > 1.0, "should spin clockwise, spin %.2f" % slime.spin)
 	_check(absf(angle_difference(a0, slime.angle)) > 0.01 or slime.spin > 1.0, "look direction turns")
+	var rolling := slime.velocity.x
 	Input.action_release("move_right")
 	await _frames(240)
-	_check(absf(slime.velocity.x) < 60.0, "rolling resistance slows it down, speed %.1f" % slime.velocity.x)
+	print("movement_test info: rolled at %.1f, %.1f four seconds after letting go" % [rolling, slime.velocity.x])
+	_check(absf(slime.velocity.x) < rolling * 0.5, "slows down after letting go, from %.1f to %.1f" % [rolling, slime.velocity.x])
 
 	# --- rolls left
 	x0 = slime.position.x

@@ -21,6 +21,7 @@ var slime: VerletSlime = null
 var _held_time: float = 0.0
 var _mashes: int = 0
 var _break_free_cooldown: float = 0.0
+var _release_cooldown: float = 0.0
 
 
 # -------------------------------- GODOT FUNCTIONS ----------------------------------------
@@ -50,6 +51,13 @@ func _physics_process(delta: float) -> void:
 	if slime.is_held():
 		slime.set_controls(0.0, false)
 		_process_held(delta, typing)
+		return
+	if slime.is_burst():
+		# A burst slime cannot hold on to anyone; let the captive go.
+		_release_cooldown = maxf(_release_cooldown - delta, 0.0)
+		if slime.holding_id != "" and _release_cooldown == 0.0:
+			_release_cooldown = 0.5
+			Net.throw_held(Vector2.UP)
 		return
 	if typing:
 		slime.set_controls(0.0, false)

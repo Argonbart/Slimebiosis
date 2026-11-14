@@ -31,14 +31,14 @@ func probe(id: int, pos: Vector2, facing: int, mode: int, seq: int, target: Pack
 func set_name(name: String) -> SpacetimeDBReducerCall:
 	return _client.call_reducer('set_name', [name], [&'String'])
 
-## 0. weight: float [br]
+## 0. points: int [br]
 ## 1. size: float [br]
-## 2. rotation_speed: float [br]
-## 3. throw_strength: float [br]
-## 4. jump_strength: float [br]
-## 5. softness: float [br]
-func set_stats(weight: float, size: float, rotation_speed: float, throw_strength: float, jump_strength: float, softness: float) -> SpacetimeDBReducerCall:
-	return _client.call_reducer('set_stats', [weight, size, rotation_speed, throw_strength, jump_strength, softness], [&'F32', &'F32', &'F32', &'F32', &'F32', &'F32'])
+## 2. rigidity: float [br]
+## 3. speed: float [br]
+## 4. weight: float [br]
+## 5. strength: float [br]
+func set_stats(points: int, size: float, rigidity: float, speed: float, weight: float, strength: float) -> SpacetimeDBReducerCall:
+	return _client.call_reducer('set_stats', [points, size, rigidity, speed, weight, strength], [&'U32', &'F32', &'F32', &'F32', &'F32', &'F32'])
 
 ## 0. dir: Vector2 [br]
 func throw_held(dir: Vector2) -> SpacetimeDBReducerCall:

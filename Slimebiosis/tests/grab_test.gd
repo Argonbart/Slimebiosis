@@ -117,7 +117,7 @@ func _run() -> void:
 	var b_id := Net.id_of(b_ident)
 	var c_id := Net.id_of(c_ident)
 	await _until(func() -> bool: return b.db.slime_transform.identity.find(a_ident) != null, "B sees A")
-	var reach := a.radius * 2.0 # centre distance of two touching slimes of this size
+	var reach := a.size * 2.0 # centre distance of two touching slimes of this size
 	var look := func() -> Vector2: return Vector2.from_angle(a.angle)
 
 	# --- referee: out of reach
@@ -187,7 +187,7 @@ func _run() -> void:
 	_check(sb.held_by.is_none(), "B no longer held")
 	var thrown := sb.launch_vel.normalized()
 	_check(thrown.dot(out) > 0.8, "thrown outward: %s vs captive direction %s" % [thrown, out])
-	_check(absf(sb.launch_vel.length() - 780.0) < 1.0, "throw speed comes from slime_stats, got %.1f" % sb.launch_vel.length())
+	_check(absf(sb.launch_vel.length() - 420.0) < 1.0, "throw speed comes from slime_stats, got %.1f" % sb.launch_vel.length())
 	var a_row: GameSlimeTransform = b.db.slime_transform.identity.find(a_ident)
 	# A keeps moving and reporting after the throw, so compare loosely.
 	_check(sb.launch_pos.distance_to(a_row.pos + thrown * reach) < 40.0, "launch_pos on the thrower's rim along the throw, off by %.1f" % sb.launch_pos.distance_to(a_row.pos + thrown * reach))
@@ -213,7 +213,7 @@ func _run() -> void:
 			var frame_s := maxf(Time.get_ticks_msec() - last_ms, 8.0) / 1000.0
 			last_ms = Time.get_ticks_msec()
 			worst_back = minf(worst_back, step)
-			worst_step = maxf(worst_step, step / (780.0 * frame_s))
+			worst_step = maxf(worst_step, step / (420.0 * frame_s))
 	_check(worst_back > -1.0, "puppet B never jumps back after a throw, worst %.1f" % worst_back)
 	_check(worst_step < 3.0, "puppet B never jumps forward after a throw, worst %.1fx the throw speed" % worst_step)
 	_check((pb.position - sb.launch_pos).dot(thrown) > 100.0, "puppet B follows B's reported flight")

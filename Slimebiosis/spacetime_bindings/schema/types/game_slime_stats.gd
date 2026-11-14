@@ -7,39 +7,39 @@ const module_name : String = "Game"
 const table_names: Array[String] = ['slime_stats']
 
 @export var identity: PackedByteArray
-@export var weight: float
+@export var points: int
 @export var size: float
-@export var rotation_speed: float
-@export var throw_strength: float
-@export var jump_strength: float
-@export var softness: float
+@export var rigidity: float
+@export var speed: float
+@export var weight: float
+@export var strength: float
 
 #BSATN metadata
 const primary_key: StringName = &'identity'
 const BSATN_TYPES: Dictionary[StringName, StringName] = {
 	"identity": "__identity__",
-	"weight": "F32",
+	"points": "U32",
 	"size": "F32",
-	"rotation_speed": "F32",
-	"throw_strength": "F32",
-	"jump_strength": "F32",
-	"softness": "F32"
+	"rigidity": "F32",
+	"speed": "F32",
+	"weight": "F32",
+	"strength": "F32"
 }
 
 ## 1. identity: PackedByteArray[br]
-## 2. weight: float[br]
+## 2. points: int[br]
 ## 3. size: float[br]
-## 4. rotation_speed: float[br]
-## 5. throw_strength: float[br]
-## 6. jump_strength: float[br]
-## 7. softness: float[br]
-static func create(p_identity: PackedByteArray, p_weight: float, p_size: float, p_rotation_speed: float, p_throw_strength: float, p_jump_strength: float, p_softness: float) -> GameSlimeStats:
+## 4. rigidity: float[br]
+## 5. speed: float[br]
+## 6. weight: float[br]
+## 7. strength: float[br]
+static func create(p_identity: PackedByteArray, p_points: int, p_size: float, p_rigidity: float, p_speed: float, p_weight: float, p_strength: float) -> GameSlimeStats:
 	var result: GameSlimeStats = GameSlimeStats.new()
 	result.identity = p_identity
-	result.weight = p_weight
+	result.points = p_points
 	result.size = p_size
-	result.rotation_speed = p_rotation_speed
-	result.throw_strength = p_throw_strength
-	result.jump_strength = p_jump_strength
-	result.softness = p_softness
+	result.rigidity = p_rigidity
+	result.speed = p_speed
+	result.weight = p_weight
+	result.strength = p_strength
 	return result

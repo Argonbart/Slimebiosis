@@ -267,10 +267,10 @@
 								},
 								{
 									"name": {
-										"some": "weight"
+										"some": "points"
 									},
 									"algebraic_type": {
-										"F32": []
+										"U32": []
 									}
 								},
 								{
@@ -283,7 +283,7 @@
 								},
 								{
 									"name": {
-										"some": "rotation_speed"
+										"some": "rigidity"
 									},
 									"algebraic_type": {
 										"F32": []
@@ -291,7 +291,7 @@
 								},
 								{
 									"name": {
-										"some": "throw_strength"
+										"some": "speed"
 									},
 									"algebraic_type": {
 										"F32": []
@@ -299,7 +299,7 @@
 								},
 								{
 									"name": {
-										"some": "jump_strength"
+										"some": "weight"
 									},
 									"algebraic_type": {
 										"F32": []
@@ -307,7 +307,7 @@
 								},
 								{
 									"name": {
-										"some": "softness"
+										"some": "strength"
 									},
 									"algebraic_type": {
 										"F32": []
@@ -533,9 +533,33 @@
 				{
 					"source_name": {
 						"scope": [],
+						"source_name": "Player"
+					},
+					"ty": 0.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
 						"source_name": "SlimeStats"
 					},
 					"ty": 3.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "Vector2"
+					},
+					"ty": 1.0,
+					"custom_ordering": true
+				},
+				{
+					"source_name": {
+						"scope": [],
+						"source_name": "TypeProbe"
+					},
+					"ty": 5.0,
 					"custom_ordering": true
 				},
 				{
@@ -553,45 +577,21 @@
 					},
 					"ty": 4.0,
 					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "TypeProbe"
-					},
-					"ty": 5.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Vector2"
-					},
-					"ty": 1.0,
-					"custom_ordering": true
-				},
-				{
-					"source_name": {
-						"scope": [],
-						"source_name": "Player"
-					},
-					"ty": 0.0,
-					"custom_ordering": true
 				}
 			]
 		},
 		{
 			"Tables": [
 				{
-					"source_name": "player",
-					"product_type_ref": 0.0,
+					"source_name": "slime_stats",
+					"product_type_ref": 3.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "player_identity_idx_btree"
+								"some": "slime_stats_identity_idx_btree"
 							},
 							"accessor_name": {
 								"some": "identity"
@@ -606,52 +606,7 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "player_identity_key"
-							},
-							"data": {
-								"Unique": {
-									"columns": [
-										0.0
-									]
-								}
-							}
-						}
-					],
-					"sequences": [],
-					"table_type": {
-						"User": []
-					},
-					"table_access": {
-						"Public": []
-					},
-					"default_values": [],
-					"is_event": false
-				},
-				{
-					"source_name": "slime_state",
-					"product_type_ref": 2.0,
-					"primary_key": [
-						0.0
-					],
-					"indexes": [
-						{
-							"source_name": {
-								"some": "slime_state_identity_idx_btree"
-							},
-							"accessor_name": {
-								"some": "identity"
-							},
-							"algorithm": {
-								"BTree": [
-									0.0
-								]
-							}
-						}
-					],
-					"constraints": [
-						{
-							"source_name": {
-								"some": "slime_state_identity_key"
+								"some": "slime_stats_identity_key"
 							},
 							"data": {
 								"Unique": {
@@ -718,15 +673,15 @@
 					"is_event": false
 				},
 				{
-					"source_name": "slime_stats",
-					"product_type_ref": 3.0,
+					"source_name": "slime_state",
+					"product_type_ref": 2.0,
 					"primary_key": [
 						0.0
 					],
 					"indexes": [
 						{
 							"source_name": {
-								"some": "slime_stats_identity_idx_btree"
+								"some": "slime_state_identity_idx_btree"
 							},
 							"accessor_name": {
 								"some": "identity"
@@ -741,7 +696,52 @@
 					"constraints": [
 						{
 							"source_name": {
-								"some": "slime_stats_identity_key"
+								"some": "slime_state_identity_key"
+							},
+							"data": {
+								"Unique": {
+									"columns": [
+										0.0
+									]
+								}
+							}
+						}
+					],
+					"sequences": [],
+					"table_type": {
+						"User": []
+					},
+					"table_access": {
+						"Public": []
+					},
+					"default_values": [],
+					"is_event": false
+				},
+				{
+					"source_name": "player",
+					"product_type_ref": 0.0,
+					"primary_key": [
+						0.0
+					],
+					"indexes": [
+						{
+							"source_name": {
+								"some": "player_identity_idx_btree"
+							},
+							"accessor_name": {
+								"some": "identity"
+							},
+							"algorithm": {
+								"BTree": [
+									0.0
+								]
+							}
+						}
+					],
+					"constraints": [
+						{
+							"source_name": {
+								"some": "player_identity_key"
 							},
 							"data": {
 								"Unique": {
@@ -1042,10 +1042,10 @@
 						"elements": [
 							{
 								"name": {
-									"some": "weight"
+									"some": "points"
 								},
 								"algebraic_type": {
-									"F32": []
+									"U32": []
 								}
 							},
 							{
@@ -1058,7 +1058,7 @@
 							},
 							{
 								"name": {
-									"some": "rotation_speed"
+									"some": "rigidity"
 								},
 								"algebraic_type": {
 									"F32": []
@@ -1066,7 +1066,7 @@
 							},
 							{
 								"name": {
-									"some": "throw_strength"
+									"some": "speed"
 								},
 								"algebraic_type": {
 									"F32": []
@@ -1074,7 +1074,7 @@
 							},
 							{
 								"name": {
-									"some": "jump_strength"
+									"some": "weight"
 								},
 								"algebraic_type": {
 									"F32": []
@@ -1082,7 +1082,7 @@
 							},
 							{
 								"name": {
-									"some": "softness"
+									"some": "strength"
 								},
 								"algebraic_type": {
 									"F32": []
@@ -1211,14 +1211,8 @@
 				"entries": [
 					{
 						"Table": {
-							"source_name": "player",
-							"canonical_name": "player"
-						}
-					},
-					{
-						"Table": {
-							"source_name": "slime_state",
-							"canonical_name": "slime_state"
+							"source_name": "slime_stats",
+							"canonical_name": "slime_stats"
 						}
 					},
 					{
@@ -1229,8 +1223,14 @@
 					},
 					{
 						"Table": {
-							"source_name": "slime_stats",
-							"canonical_name": "slime_stats"
+							"source_name": "slime_state",
+							"canonical_name": "slime_state"
+						}
+					},
+					{
+						"Table": {
+							"source_name": "player",
+							"canonical_name": "player"
 						}
 					},
 					{

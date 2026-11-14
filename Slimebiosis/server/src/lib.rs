@@ -54,19 +54,19 @@ const MIN_HOLD_MICROS: i64 = 600_000;
 const SHAPE_BYTES: usize = 64;
 
 // Starting values for `SlimeStats`. Clients read them from the table.
-const DEFAULT_WEIGHT: f32 = 1.0;
+const DEFAULT_POINTS: u32 = 32;
 const DEFAULT_SIZE: f32 = 40.0;
-const DEFAULT_ROTATION_SPEED: f32 = 5000.0;
-const DEFAULT_THROW_STRENGTH: f32 = 780.0;
-const DEFAULT_JUMP_STRENGTH: f32 = 400.0;
-const DEFAULT_SOFTNESS: f32 = 0.5;
+const DEFAULT_RIGIDITY: f32 = 0.5;
+const DEFAULT_SPEED: f32 = 5000.0;
+const DEFAULT_WEIGHT: f32 = 1.0;
+const DEFAULT_STRENGTH: f32 = 420.0;
 // Allowed range of each stat for `set_stats`. Mirrors the sliders in ui/hud.gd.
-const WEIGHT_RANGE: (f32, f32) = (0.2, 5.0);
-const SIZE_RANGE: (f32, f32) = (24.0, 100.0);
-const ROTATION_SPEED_RANGE: (f32, f32) = (500.0, 10000.0);
-const THROW_STRENGTH_RANGE: (f32, f32) = (100.0, 2000.0);
-const JUMP_STRENGTH_RANGE: (f32, f32) = (100.0, 1000.0);
-const SOFTNESS_RANGE: (f32, f32) = (0.0, 1.0);
+const POINTS_RANGE: (u32, u32) = (8, 64);
+const SIZE_RANGE: (f32, f32) = (12.0, 500.0);
+const RIGIDITY_RANGE: (f32, f32) = (0.0, 1.0);
+const SPEED_RANGE: (f32, f32) = (0.0, 5000.0);
+const WEIGHT_RANGE: (f32, f32) = (0.25, 4.0);
+const STRENGTH_RANGE: (f32, f32) = (0.0, 1500.0);
 
 /// One row per identity that has ever connected. Persists across sessions.
 #[spacetimedb::table(accessor = player, public)]
@@ -120,18 +120,18 @@ pub struct SlimeState {
 pub struct SlimeStats {
     #[primary_key]
     pub identity: Identity,
-    /// Scales how far this slime flies when thrown and how much it slows its carrier.
-    pub weight: f32,
+    /// Number of points on the simulated rim.
+    pub points: u32,
     /// Radius of the body in pixels.
     pub size: f32,
-    /// Rolling drive of the body (the client's `drive_acceleration`).
-    pub rotation_speed: f32,
-    /// Launch speed of a thrown slime of weight 1.
-    pub throw_strength: f32,
-    /// Upward speed of a jump.
-    pub jump_strength: f32,
-    /// 0 = stiff rim, 1 = floppy rim.
-    pub softness: f32,
+    /// 0 = floppy rim, 1 = stiff rim.
+    pub rigidity: f32,
+    /// Rolling drive of the body.
+    pub speed: f32,
+    /// How hard this slime is to carry and throw.
+    pub weight: f32,
+    /// Throw impulse: a thrown slime leaves at strength / its weight.
+    pub strength: f32,
 }
 
 fn radius_of(ctx: &ReducerContext, identity: Identity) -> f32 {
@@ -238,12 +238,12 @@ pub fn client_connected(ctx: &ReducerContext) {
     if ctx.db.slime_stats().identity().find(me).is_none() {
         ctx.db.slime_stats().insert(SlimeStats {
             identity: me,
-            weight: DEFAULT_WEIGHT,
+            points: DEFAULT_POINTS,
             size: DEFAULT_SIZE,
-            rotation_speed: DEFAULT_ROTATION_SPEED,
-            throw_strength: DEFAULT_THROW_STRENGTH,
-            jump_strength: DEFAULT_JUMP_STRENGTH,
-            softness: DEFAULT_SOFTNESS,
+            rigidity: DEFAULT_RIGIDITY,
+            speed: DEFAULT_SPEED,
+            weight: DEFAULT_WEIGHT,
+            strength: DEFAULT_STRENGTH,
         });
     }
 }
@@ -286,24 +286,24 @@ pub fn set_name(ctx: &ReducerContext, name: String) -> Result<(), String> {
 #[spacetimedb::reducer]
 pub fn set_stats(
     ctx: &ReducerContext,
-    weight: f32,
+    points: u32,
     size: f32,
-    rotation_speed: f32,
-    throw_strength: f32,
-    jump_strength: f32,
-    softness: f32,
+    rigidity: f32,
+    speed: f32,
+    weight: f32,
+    strength: f32,
 ) -> Result<(), String> {
     let me = ctx.sender();
-    if ![weight, size, rotation_speed, throw_strength, jump_strength, softness].iter().all(|v| v.is_finite()) {
+    if ![size, rigidity, speed, weight, strength].iter().all(|v| v.is_finite()) {
         return Err("invalid stats".into());
     }
     let mut row = ctx.db.slime_stats().identity().find(me).ok_or("you have no slime")?;
-    row.weight = weight.clamp(WEIGHT_RANGE.0, WEIGHT_RANGE.1);
+    row.points = points.clamp(POINTS_RANGE.0, POINTS_RANGE.1);
     row.size = size.clamp(SIZE_RANGE.0, SIZE_RANGE.1);
-    row.rotation_speed = rotation_speed.clamp(ROTATION_SPEED_RANGE.0, ROTATION_SPEED_RANGE.1);
-    row.throw_strength = throw_strength.clamp(THROW_STRENGTH_RANGE.0, THROW_STRENGTH_RANGE.1);
-    row.jump_strength = jump_strength.clamp(JUMP_STRENGTH_RANGE.0, JUMP_STRENGTH_RANGE.1);
-    row.softness = softness.clamp(SOFTNESS_RANGE.0, SOFTNESS_RANGE.1);
+    row.rigidity = rigidity.clamp(RIGIDITY_RANGE.0, RIGIDITY_RANGE.1);
+    row.speed = speed.clamp(SPEED_RANGE.0, SPEED_RANGE.1);
+    row.weight = weight.clamp(WEIGHT_RANGE.0, WEIGHT_RANGE.1);
+    row.strength = strength.clamp(STRENGTH_RANGE.0, STRENGTH_RANGE.1);
     ctx.db.slime_stats().identity().update(row);
     Ok(())
 }
@@ -401,7 +401,7 @@ pub fn throw_held(ctx: &ReducerContext, dir: Vector2) -> Result<(), String> {
         return Err("invalid throw direction".into());
     }
     let unit = Vector2 { x: dir.x / len, y: dir.y / len };
-    let strength = ctx.db.slime_stats().identity().find(me).map(|s| s.throw_strength).unwrap_or(DEFAULT_THROW_STRENGTH);
+    let strength = ctx.db.slime_stats().identity().find(me).map(|s| s.strength).unwrap_or(DEFAULT_STRENGTH);
     let weight = ctx.db.slime_stats().identity().find(captive).map(|s| s.weight).unwrap_or(DEFAULT_WEIGHT);
     let speed = strength / weight.max(WEIGHT_RANGE.0);
     let vel = Vector2 { x: unit.x * speed, y: unit.y * speed };

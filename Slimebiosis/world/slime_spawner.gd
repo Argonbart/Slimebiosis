@@ -36,7 +36,7 @@ func _on_transform(id: String, row: GameSlimeTransform) -> void:
 		slime.simulated = false
 		slime.follow_center = true
 		slime.show_face = true
-		slime.radius = Net.stats[id].size if Net.stats.has(id) else DEFAULT_RADIUS
+		slime.size = Net.stats[id].size if Net.stats.has(id) else DEFAULT_RADIUS
 		slime.position = row.pos
 		var puppet := RemotePuppet.new()
 		puppet.name = "RemotePuppet"
