@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://cfqrwyhk4c65b"]
+
+[ext_resource type="PackedScene" uid="uid://k1nbr8y1rhu1" path="res://levels/outline_level.tscn" id="1_rupst"]
+
+[node name="Playground" type="Node2D" unique_id=63148846]
+
+[node name="OutlineLevel" parent="." unique_id=461453500 instance=ExtResource("1_rupst")]
