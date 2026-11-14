@@ -3,9 +3,16 @@
 [ext_resource type="Script" uid="uid://b2il4pjk1aiqh" path="res://slime/slime.gd" id="1"]
 [ext_resource type="Script" uid="uid://c4be35r40vtdr" path="res://slime/slime_controls.gd" id="2"]
 
-[node name="Slime" type="Node2D" unique_id=789339637]
+[node name="Slime" type="Node2D" node_paths=PackedStringArray("controls") unique_id=789339637]
 script = ExtResource("1")
+controls = NodePath("Controls")
+radius = 40.0
+friction = 0.5
+shape_stiffness = 400.0
 
-[node name="Controls" type="Node" parent="." unique_id=1878193730]
+[node name="Controls" type="Node" parent="." node_paths=PackedStringArray("slime") unique_id=1878193730]
 script = ExtResource("2")
+slime = NodePath("..")
 move_speed = 500.0
+jump_speed = 400.0
+

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Slimebiosis"
-run/main_scene="uid://cfqrwyhk4c65b"
+run/main_scene="uid://k1nbr8y1rhu1"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [editor_plugins]
