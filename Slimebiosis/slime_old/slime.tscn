@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://c0evlrn2wcavb"]
-
-[ext_resource type="Script" uid="uid://ch7d81lqsmspj" path="res://slime/slime.gd" id="1"]
-
-[node name="Slime" type="Node2D" unique_id=1207456465]
-script = ExtResource("1")
-radius = 40.0
-friction = 0.5
-shape_stiffness = 400.0

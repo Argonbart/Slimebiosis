@@ -1,5 +1,0 @@
-/home/nah/Projects/slimecrime-mp/server/target/release/build/serde/90823a8f61afc28a/out/build_script_build.d: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/build.rs
-
-/home/nah/Projects/slimecrime-mp/server/target/release/build/serde/90823a8f61afc28a/out/build_script_build: /home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/build.rs
-
-/home/nah/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/build.rs:
