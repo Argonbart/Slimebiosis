@@ -2,7 +2,8 @@ extends Node2D
 
 const SLIME := preload("res://slime/slime.tscn")
 const SETTINGS := [
-	["Movement speed", "move_speed", 50.0, 1000.0, 5.0, "How fast the slime moves sideways."],
+	["Ground friction", "friction", 0.0, 1.0, 0.01, "More grip converts spin into forward speed faster and increases rolling resistance."],
+	["Movement speed", "move_speed", 50.0, 1000.0, 5.0, "Higher values let the slime build up more rolling speed."],
 	["Jump bounce", "jump_speed", 150.0, 650.0, 5.0, "How high the slime jumps when you press Space."],
 	["Stiffness", "shape_stiffness", 100.0, 700.0, 5.0, "Lower lets the slime deform more when squeezing through gaps."],
 	["Size (on respawn)", "radius", 24.0, 100.0, 1.0, "Changes the body and its colliders when you respawn."],
