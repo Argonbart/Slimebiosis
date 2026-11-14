@@ -1,0 +1,271 @@
+[gd_scene format=3 uid="uid://chq63blhw7eeq"]
+
+[ext_resource type="Script" uid="uid://b8gt4knnasj0w" path="res://hoop_level/hoop_level.gd" id="1_level"]
+[ext_resource type="PackedScene" uid="uid://dpk4hswvugagd" path="res://slime/slime.tscn" id="2_slime"]
+[ext_resource type="Script" uid="uid://diemkkhvd4gb" path="res://slime/slime_controller.gd" id="3_controller"]
+
+[ext_resource type="Script" path="res://hoop_level/pressure_plate.gd" id="4_plate"]
+
+[sub_resource type="StyleBoxFlat" id="HUDStyle"]
+content_margin_left = 12.0
+content_margin_top = 9.0
+content_margin_right = 12.0
+content_margin_bottom = 9.0
+bg_color = Color(0.12, 0.14, 0.17, 0.94)
+
+[node name="HoopLevel" type="Node2D" unique_id=40409473]
+script = ExtResource("1_level")
+
+[node name="Background" type="Polygon2D" parent="." unique_id=329072557]
+color = Color(0.93, 0.94, 0.95, 1)
+polygon = PackedVector2Array(-3000, -3000, 4000, -3000, 4000, 4000, -3000, 4000)
+
+[node name="Terrain" type="Node2D" parent="." unique_id=104202016]
+
+[node name="Floor" type="StaticBody2D" parent="Terrain" unique_id=816368434]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/Floor" unique_id=1848223838]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(-20, 1240, 1440, 1240, 1440, 1264, -20, 1264)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/Floor" unique_id=1034604424]
+polygon = PackedVector2Array(-20, 1240, 1440, 1240, 1440, 1264, -20, 1264)
+
+[node name="LeftWall" type="StaticBody2D" parent="Terrain" unique_id=183116796]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/LeftWall" unique_id=1555405072]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(-20, -20, 8, -20, 8, 1264, -20, 1264)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/LeftWall" unique_id=1883229465]
+polygon = PackedVector2Array(-20, -20, 8, -20, 8, 1264, -20, 1264)
+
+[node name="Ceiling" type="StaticBody2D" parent="Terrain" unique_id=1602933722]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/Ceiling" unique_id=1573692162]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(-20, -20, 1240, -20, 1240, 8, -20, 8)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/Ceiling" unique_id=1136698100]
+polygon = PackedVector2Array(-20, -20, 1240, -20, 1240, 8, -20, 8)
+
+[node name="RightWall" type="StaticBody2D" parent="Terrain" unique_id=946013082]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/RightWall" unique_id=952794893]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(1220, 0, 1244, 0, 1244, 1000, 1220, 1000)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/RightWall" unique_id=1372482730]
+polygon = PackedVector2Array(1220, 0, 1244, 0, 1244, 1000, 1220, 1000)
+
+[node name="ExitLandingEnd" type="StaticBody2D" parent="Terrain" unique_id=744047838]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/ExitLandingEnd" unique_id=1548850967]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(1420, 1170, 1444, 1170, 1444, 1264, 1420, 1264)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/ExitLandingEnd" unique_id=293855877]
+polygon = PackedVector2Array(1420, 1170, 1444, 1170, 1444, 1264, 1420, 1264)
+
+[node name="UpperLeftLedge" type="StaticBody2D" parent="Terrain" unique_id=788006117]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/UpperLeftLedge" unique_id=1879016434]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(8, 420, 186, 420, 210, 430, 210, 466, 182, 504, 64, 490, 8, 480)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/UpperLeftLedge" unique_id=1350521491]
+polygon = PackedVector2Array(8, 420, 186, 420, 210, 430, 210, 466, 182, 504, 64, 490, 8, 480)
+
+[node name="MiddleLedge" type="StaticBody2D" parent="Terrain" unique_id=720539413]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/MiddleLedge" unique_id=123803218]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(208, 620, 228, 612, 480, 612, 496, 622, 496, 684, 270, 676, 244, 688, 210, 684, 202, 662)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/MiddleLedge" unique_id=1960144490]
+polygon = PackedVector2Array(208, 620, 228, 612, 480, 612, 496, 622, 496, 684, 270, 676, 244, 688, 210, 684, 202, 662)
+
+[node name="LeftDescendingRamp" type="StaticBody2D" parent="Terrain" unique_id=1557399970]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/LeftDescendingRamp" unique_id=2027942235]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(8, 824, 224, 880, 204, 928, 8, 858)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/LeftDescendingRamp" unique_id=744473724]
+polygon = PackedVector2Array(8, 824, 224, 880, 204, 928, 8, 858)
+
+[node name="LowerAscendingRamp" type="StaticBody2D" parent="Terrain" unique_id=1391115361]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/LowerAscendingRamp" unique_id=144757641]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(176, 1030, 280, 986, 368, 940, 398, 984, 192, 1080)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/LowerAscendingRamp" unique_id=1503008037]
+polygon = PackedVector2Array(176, 1030, 280, 986, 368, 940, 398, 984, 192, 1080)
+
+[node name="StartRamp" type="StaticBody2D" parent="Terrain" unique_id=663241168]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/StartRamp" unique_id=1700679709]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(8, 1144, 244, 1240, 8, 1240)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/StartRamp" unique_id=1545752427]
+polygon = PackedVector2Array(8, 1144, 244, 1240, 8, 1240)
+
+[node name="HoopBackboard" type="StaticBody2D" parent="Terrain" unique_id=1989155265]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/HoopBackboard" unique_id=834368230]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(1216, 714, 1220, 714, 1220, 890, 1216, 890)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/HoopBackboard" unique_id=200952269]
+polygon = PackedVector2Array(1216, 714, 1220, 714, 1220, 890, 1216, 890)
+
+[node name="HoopMount" type="StaticBody2D" parent="Terrain" unique_id=486179675]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/HoopMount" unique_id=1929858884]
+color = Color(0.43, 0.46, 0.49, 1)
+polygon = PackedVector2Array(1216, 796, 1220, 796, 1220, 804, 1216, 804)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/HoopMount" unique_id=1753397388]
+polygon = PackedVector2Array(1216, 796, 1220, 796, 1220, 804, 1216, 804)
+
+[node name="HoopLeftLip" type="StaticBody2D" parent="Terrain" unique_id=1328218357]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/HoopLeftLip" unique_id=1894938804]
+color = Color(1, 0.35, 0.39, 1)
+polygon = PackedVector2Array(1096, 786, 1104, 786, 1104, 814, 1096, 814)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/HoopLeftLip" unique_id=1467028103]
+polygon = PackedVector2Array(1096, 786, 1104, 786, 1104, 814, 1096, 814)
+
+[node name="HoopRightLip" type="StaticBody2D" parent="Terrain" unique_id=1489695943]
+
+[node name="Visual" type="Polygon2D" parent="Terrain/HoopRightLip" unique_id=1388872976]
+color = Color(1, 0.35, 0.39, 1)
+polygon = PackedVector2Array(1212, 786, 1220, 786, 1220, 814, 1212, 814)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Terrain/HoopRightLip" unique_id=1900772026]
+polygon = PackedVector2Array(1212, 786, 1220, 786, 1220, 814, 1212, 814)
+
+[node name="Doors" type="Node2D" parent="." unique_id=1034714234]
+
+[node name="ExitDoor" type="StaticBody2D" parent="Doors" unique_id=1088636988]
+
+[node name="Visual" type="Polygon2D" parent="Doors/ExitDoor" unique_id=1427492703]
+color = Color(0.16, 0.76, 0.34, 1)
+polygon = PackedVector2Array(1220, 1000, 1244, 1000, 1244, 1240, 1220, 1240)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Doors/ExitDoor" unique_id=1984879742]
+polygon = PackedVector2Array(1220, 1000, 1244, 1000, 1244, 1240, 1220, 1240)
+
+[node name="UpgradeButton" type="AnimatableBody2D" parent="." unique_id=1736859345]
+position = Vector2(604, 1204)
+script = ExtResource("4_plate")
+sync_to_physics = false
+
+[node name="Visual" type="Polygon2D" parent="UpgradeButton" unique_id=526054771]
+color = Color(1, 0.35, 0.39, 1)
+polygon = PackedVector2Array(-184, 0, 184, 0, 190, 6, 190, 36, -190, 36, -190, 6)
+
+[node name="Collision" type="CollisionPolygon2D" parent="UpgradeButton" unique_id=966105846]
+polygon = PackedVector2Array(-184, 0, 184, 0, 190, 6, 190, 60, -190, 60, -190, 6)
+
+[node name="Hoop" type="Node2D" parent="." unique_id=1002010154]
+
+[node name="Rim" type="Line2D" parent="Hoop" unique_id=2015753143]
+points = PackedVector2Array(1100, 800, 1216, 800)
+width = 8.0
+default_color = Color(1, 0.35, 0.39, 1)
+
+[node name="Net" type="Line2D" parent="Hoop" unique_id=1430705442]
+points = PackedVector2Array(1104, 808, 1122, 856, 1194, 856, 1212, 808)
+width = 2.0
+default_color = Color(0.6, 0.62, 0.64, 1)
+
+[node name="NetCross1" type="Line2D" parent="Hoop" unique_id=1215517025]
+points = PackedVector2Array(1122, 808, 1176, 856)
+width = 2.0
+default_color = Color(0.6, 0.62, 0.64, 1)
+
+[node name="NetCross2" type="Line2D" parent="Hoop" unique_id=992175566]
+points = PackedVector2Array(1194, 808, 1140, 856)
+width = 2.0
+default_color = Color(0.6, 0.62, 0.64, 1)
+
+[node name="UpgradeSpawn" type="Node2D" parent="." unique_id=1527111857]
+
+[node name="Player" parent="." unique_id=273676905 instance=ExtResource("2_slime")]
+position = Vector2(270, 1170)
+body_color = Color(0.24, 0.68, 0.74, 1)
+radius = 48.0
+
+[node name="Controller" type="Node" parent="Player" unique_id=733498122 node_paths=PackedStringArray("slime", "grab_target")]
+process_physics_priority = -1
+script = ExtResource("3_controller")
+slime = NodePath("..")
+grab_target = NodePath("../../Companion")
+
+[node name="Companion" parent="." unique_id=152822270 instance=ExtResource("2_slime")]
+position = Vector2(366, 1180)
+body_color = Color(0.65, 0.43, 0.79, 1)
+show_grab_sector = false
+radius = 36.0
+
+[node name="Controller" type="Node" parent="Companion" unique_id=259880543 node_paths=PackedStringArray("slime")]
+process_physics_priority = -1
+script = ExtResource("3_controller")
+slime = NodePath("..")
+move_left_key = 4194319
+move_right_key = 4194321
+boost_key = 4194320
+jump_key = 4194309
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1468083259]
+position = Vector2(700, 620)
+
+[node name="Labels" type="Node2D" parent="." unique_id=1528949671]
+
+[node name="Title" type="Label" parent="Labels" unique_id=1414266893]
+offset_left = 48.0
+offset_top = 140.0
+theme_override_colors/font_color = Color(0.22, 0.25, 0.28, 1)
+theme_override_font_sizes/font_size = 28
+text = "HOOP ROOM / GREYBOX"
+
+[node name="Hint" type="Label" parent="Labels" unique_id=431284798]
+offset_left = 1000.0
+offset_top = 858.0
+theme_override_colors/font_color = Color(0.22, 0.25, 0.28, 1)
+theme_override_font_sizes/font_size = 18
+text = "PASS THROUGH HOOP"
+
+[node name="ButtonHint" type="Label" parent="Labels" unique_id=531285924]
+offset_left = 454.0
+offset_top = 1166.0
+theme_override_colors/font_color = Color(0.22, 0.25, 0.28, 1)
+theme_override_font_sizes/font_size = 22
+text = "UPGRADE BUTTON"
+
+[node name="ExitHint" type="Label" parent="Labels" unique_id=1058006346]
+offset_left = 1260.0
+offset_top = 1120.0
+theme_override_colors/font_color = Color(0.22, 0.25, 0.28, 1)
+theme_override_font_sizes/font_size = 22
+text = "EXIT"
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=2115072569]
+
+[node name="Panel" type="PanelContainer" parent="HUD" unique_id=651060745]
+offset_left = 12.0
+offset_top = 12.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("HUDStyle")
+
+[node name="Instructions" type="Label" parent="HUD/Panel" unique_id=625122002]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "A / D: roll   Space: jump   W: stiffen   E: grab / throw
+Left / Right: companion   Enter: jump   Up: stiffen   R: reset
+Gold quarter: grab area   Arrow: throw direction
+Upgrade: stand on the red button   |   Doors: pass either slime through the hoop"
