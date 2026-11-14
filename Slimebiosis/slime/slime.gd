@@ -32,6 +32,9 @@ const SOLVER_PASSES: int = 8
 @export_range(0.01, 5000.0) var edge_boost_multiplier: float = 50.0
 @export_flags_2d_physics var terrain_mask: int = 1
 
+var _held_slime: VerletSlime = null
+var _grab_offsets: PackedVector2Array = PackedVector2Array()
+var _holder: VerletSlime = null
 var _move_direction: float = 0.0
 var _boosting: bool = false
 var _excluded_bodies: Array[RID] = []
@@ -62,6 +65,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_instance_valid(_holder):
+		return
+	var carrying: bool = is_instance_valid(_held_slime)
 	_update_collision_exclusions()
 
 	_apply_contact_drive(_move_direction, delta)
@@ -128,6 +134,13 @@ func _resample_ring() -> void:
 		var blend: float = sample - first
 		points.append(_points[first].lerp(_points[second], blend))
 		previous.append(_previous[first].lerp(_previous[second], blend))
+	
+	if is_instance_valid(_holder):
+		var center: Vector2 = _holder.get_center()
+		var angle: float = _holder._ring_angle(center)
+		_grab_offsets.clear()
+		for point: Vector2 in points:
+			_grab_offsets.append((point - center).rotated(-angle))
 	
 	_points = points
 	_previous = previous
@@ -206,6 +219,23 @@ func _solve_area() -> void:
 		_points[index] += correction
 
 
+func _ring_angle(center: Vector2) -> float:
+	var alignment: Vector2 = Vector2.ZERO
+	for index: int in point_count:
+		var rest: Vector2 = Vector2.from_angle(TAU * index / point_count)
+		var offset: Vector2 = _points[index] - center
+		alignment += Vector2(rest.dot(offset), rest.cross(offset))
+	return alignment.angle()
+
+
+func _carry_with(center: Vector2, angle: float) -> void:
+	for index: int in point_count:
+		_points[index] = center + _grab_offsets[index].rotated(angle)
+	_previous = _points.duplicate()
+	_update_solid_outline()
+	queue_redraw()
+
+
 func _restore_roundness(strength: float) -> void:
 	var center: Vector2 = get_center()
 	var alignment: Vector2 = Vector2.ZERO
@@ -272,10 +302,12 @@ func _update_collision_exclusions() -> void:
 	_excluded_bodies.clear()
 	if solid_body != null:
 		_excluded_bodies.append(solid_body.get_rid())
-		solid_outline.shape = ConvexPolygonShape2D.new()
+	for partner: VerletSlime in [_holder, _held_slime]:
+		if is_instance_valid(partner) and partner.solid_body != null:
+			_excluded_bodies.append(partner.solid_body.get_rid())
 	var center: Vector2 = get_center()
 	for other: VerletSlime in get_tree().get_nodes_in_group("solid_slimes"):
-		if other == self:
+		if other == self or other == _holder or other == _held_slime:
 			continue
 		# A smaller rider resolves contact against its support, without deforming the support in return.
 		var offset: Vector2 = other.get_center() - center
@@ -328,6 +360,31 @@ func _recover_point(point: Vector2, space: PhysicsDirectSpaceState2D, overlap: P
 
 
 # -------------------------------- EXTERNAL FUNCTIONS ----------------------------------------
+
+
+func toggle_grab(target: VerletSlime) -> void:
+	if is_instance_valid(_held_slime):
+		_held_slime._previous = _held_slime._points.duplicate()
+		_held_slime._holder = null
+		_held_slime = null
+		return
+	if not is_instance_valid(target) or target == self or is_instance_valid(_holder):
+		return
+	if is_instance_valid(target._holder) or is_instance_valid(target._held_slime):
+		return
+	
+	var reach: float = 18.0
+	for point: Vector2 in _points:
+		for target_point: Vector2 in target._points:
+			if point.distance_squared_to(target_point) <= reach * reach:
+				_held_slime = target
+				target._holder = self
+				var center: Vector2 = get_center()
+				var angle: float = _ring_angle(center)
+				target._grab_offsets.clear()
+				for held_point: Vector2 in target._points:
+					target._grab_offsets.append((held_point - center).rotated(-angle))
+				return
 
 
 func set_controls(direction: float, boosting: bool) -> void:
