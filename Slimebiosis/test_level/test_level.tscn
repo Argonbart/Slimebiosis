@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://k1nbr8y1rhu1"]
+
+[ext_resource type="Script" uid="uid://mcijm5qjy2e" path="res://test_level/test_level.gd" id="1_866p8"]
+[ext_resource type="PackedScene" uid="uid://dpk4hswvugagd" path="res://slime/slime.tscn" id="2_o12yy"]
+[ext_resource type="Script" uid="uid://diemkkhvd4gb" path="res://slime/slime_controller.gd" id="3_controller"]
+
+[node name="TestLevel" type="Node2D" unique_id=461453500 node_paths=PackedStringArray("camera", "slime")]
+script = ExtResource("1_866p8")
+camera = NodePath("VerletSlime/Camera")
+slime = NodePath("VerletSlime")
+camera_min_x = 100.0
+camera_max_x = 5100.0
+follow_elevation = true
+
+[node name="Terrain" type="StaticBody2D" parent="." unique_id=877425665]
+
+[node name="Silhouette" type="Polygon2D" parent="Terrain" unique_id=1760179521]
+color = Color(0.25, 0.48, 0.42, 1)
+polygon = PackedVector2Array(-1500, 531.25, 0, 531.25, 190, 531.25, 440, 371.875, 470, 371.875, 620, 465.625, 1020, 465.625, 1020, 259.375, 1050, 259.375, 1285, 406.25, 1285, 534.375, 1285, 625, 1575, 625, 1575, 534.375, 1605, 534.375, 1895, 171.875, 1930, 171.875, 1930, 421.875, 2205, 421.875, 2205, 521.875, 2940, 521.875, 2940, 340.625, 2970, 340.625, 3280, 437.5, 3370, 384.375, 3400, 384.375, 3790, 506.25, 3790, 387.5, 4200, 387.5, 4365, 493.75, 4605, 193.75, 4640, 193.75, 4640, 434.375, 4905, 434.375, 4905, 321.875, 5000, 321.875, 5800, 321.875, 5800, 887.5, -1500, 887.5)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Terrain" unique_id=2050276645]
+polygon = PackedVector2Array(-1500, 531.25, 0, 531.25, 190, 531.25, 440, 371.875, 470, 371.875, 620, 465.625, 1020, 465.625, 1020, 259.375, 1050, 259.375, 1285, 406.25, 1285, 534.375, 1285, 625, 1575, 625, 1575, 534.375, 1605, 534.375, 1895, 171.875, 1930, 171.875, 1930, 421.875, 2205, 421.875, 2205, 521.875, 2940, 521.875, 2940, 340.625, 2970, 340.625, 3280, 437.5, 3370, 384.375, 3400, 384.375, 3790, 506.25, 3790, 387.5, 4200, 387.5, 4365, 493.75, 4605, 193.75, 4640, 193.75, 4640, 434.375, 4905, 434.375, 4905, 321.875, 5000, 321.875, 5800, 321.875, 5800, 887.5, -1500, 887.5)
+
+[node name="VerletSlime" parent="." unique_id=1456755017 instance=ExtResource("2_o12yy")]
+
+[node name="Camera" type="Camera2D" parent="VerletSlime" unique_id=480028636]
+position = Vector2(100, 420)
+zoom = Vector2(0.98, 0.98)
+position_smoothing_enabled = true
+
+[node name="WASDController" type="Node" parent="VerletSlime" unique_id=642132042 node_paths=PackedStringArray("slime", "grab_target")]
+process_physics_priority = -1
+script = ExtResource("3_controller")
+slime = NodePath("..")
+grab_target = NodePath("../../ArrowSlime")
+
+[node name="PitPlatform" type="StaticBody2D" parent="." unique_id=1354608270]
+
+[node name="Silhouette" type="Polygon2D" parent="PitPlatform" unique_id=1746774344]
+color = Color(0.25, 0.48, 0.42, 1)
+polygon = PackedVector2Array(1335, 534.375, 1500, 534.375, 1500, 584.375, 1335, 584.375)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="PitPlatform" unique_id=1034288438]
+polygon = PackedVector2Array(1335, 534.375, 1500, 534.375, 1500, 584.375, 1335, 584.375)
+
+[node name="FloatingRamp" type="StaticBody2D" parent="." unique_id=178361746]
+
+[node name="Silhouette" type="Polygon2D" parent="FloatingRamp" unique_id=276438681]
+color = Color(0.25, 0.48, 0.42, 1)
+polygon = PackedVector2Array(2235, 421.875, 2480, 268.75, 2510, 268.75, 2510, 503.125, 2235, 503.125)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="FloatingRamp" unique_id=2142895391]
+polygon = PackedVector2Array(2235, 421.875, 2480, 268.75, 2510, 268.75, 2510, 503.125, 2235, 503.125)
+
+[node name="ArrowSlime" parent="." unique_id=1131061530 instance=ExtResource("2_o12yy")]
+position = Vector2(-160, 420)
+body_color = Color(0.76, 0.52, 0.92, 1)
+
+[node name="ArrowController" type="Node" parent="ArrowSlime" unique_id=1633362673 node_paths=PackedStringArray("slime")]
+process_physics_priority = -1
+script = ExtResource("3_controller")
+slime = NodePath("..")
+move_left_key = 4194319
+move_right_key = 4194321
+boost_key = 4194320
