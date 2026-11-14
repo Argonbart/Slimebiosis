@@ -1,18 +1,13 @@
-[gd_scene format=3 uid="uid://egfy4d0iocy5"]
+[gd_scene format=3 uid="uid://dpk4hswvugagd"]
 
-[ext_resource type="Script" uid="uid://b2il4pjk1aiqh" path="res://slime/slime.gd" id="1"]
-[ext_resource type="Script" uid="uid://c4be35r40vtdr" path="res://slime/slime_controls.gd" id="2"]
+[ext_resource type="Script" uid="uid://kd1vvcamufws" path="res://slime/slime.gd" id="1_iq4b8"]
 
-[node name="Slime" type="Node2D" node_paths=PackedStringArray("controls") unique_id=789339637]
-script = ExtResource("1")
-controls = NodePath("Controls")
-radius = 40.0
-friction = 0.5
-shape_stiffness = 400.0
+[node name="VerletSlime" type="Node2D" unique_id=1456755017 node_paths=PackedStringArray("solid_body", "solid_outline")]
+script = ExtResource("1_iq4b8")
+solid_body = NodePath("SolidBody")
+solid_outline = NodePath("SolidBody/Outline")
 
-[node name="Controls" type="Node" parent="." node_paths=PackedStringArray("slime") unique_id=1878193730]
-script = ExtResource("2")
-slime = NodePath("..")
-move_speed = 500.0
-jump_speed = 400.0
+[node name="SolidBody" type="StaticBody2D" parent="." unique_id=543482830]
+
+[node name="Outline" type="CollisionShape2D" parent="SolidBody" unique_id=1180736607]
 

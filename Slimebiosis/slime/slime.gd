@@ -1,206 +1,322 @@
-class_name Slime
+class_name VerletSlime
 extends Node2D
-## Simulates and draws a deformable slime driven by a ring of rigid bodies.
+## Simulates a soft ring using Verlet integration and an enclosed-area constraint.
 
 
-const POINT_COUNT: int = 16
-
+const SOLVER_PASSES: int = 8
 
 @export_category("Components")
-@export var controls: SlimeControls = null
+@export var solid_body: StaticBody2D = null
+@export var solid_outline: CollisionShape2D = null
+
+@export_category("Settings")
+@export var body_color: Color = Color("#65d7bf")
+@export var move_left_key: Key = KEY_A
+@export var move_right_key: Key = KEY_D
+@export var edge_boost_key: Key = KEY_W
 
 @export_category("Data")
-
-@export_range(24.0, 100.0) var radius: float = 44.0:
+@export_range(8, 64) var point_count: int = 32:
 	set(value):
+		var count: int = clampi(value, 8, 64)
+		if count == point_count:
+			return
+		point_count = count
+		if not _points.is_empty():
+			_resample_ring()
+@export var drive_acceleration: float = 5000.0
+@export_range(12.0, 100.0) var radius: float = 100.0:
+	set(value):
+		var ratio: float = value / radius
 		radius = value
-		if _circle != null:
-			_update_size.call_deferred()
-@export_range(0.5, 20.0) var total_mass: float = 4.0
-@export_range(0.0, 1.0) var friction: float = 0.8:
-	set(value):
-		friction = value
-		if _contact_material != null:
-			_contact_material.friction = value
-@export_range(0.0, 1.0) var bounce: float = 0.15
-@export_range(100.0, 700.0) var shape_stiffness: float = 650.0
-@export_range(4.0, 30.0) var shape_damping: float = 24.0
-@export_flags_2d_physics var floor_mask: int = 1
+		_rest_edge *= ratio
+		_rest_area *= ratio * ratio
+@export_range(0.0, 1.0) var edge_strength: float = 0.3
+@export_range(0.01, 5000.0) var edge_boost_multiplier: float = 50.0
+@export_flags_2d_physics var terrain_mask: int = 1
 
-var _points: Array[RigidBody2D] = []
-var _rest_offsets: Array[Vector2] = []
-var _center: Vector2 = Vector2.ZERO
-var _velocity: Vector2 = Vector2.ZERO
-var _circle: CircleShape2D = null
-var _collider_radius: float = 0.0
-var _contact_material: PhysicsMaterial = null
-var _angular_speed: float = 0.0
+var _excluded_bodies: Array[RID] = []
+var _points: PackedVector2Array = PackedVector2Array()
+var _previous: PackedVector2Array = PackedVector2Array()
+var _clear_positions: PackedVector2Array = PackedVector2Array()
+var _sweep_starts: PackedVector2Array = PackedVector2Array()
+var _rest_area: float = 0.0
+var _rest_edge: float = 0.0
 
 
 # -------------------------------- GODOT FUNCTIONS ----------------------------------------
 
 
 func _ready() -> void:
-	_collider_radius = radius * 0.22
-	_circle = CircleShape2D.new()
-	_circle.radius = _collider_radius
-	_contact_material = PhysicsMaterial.new()
-	_contact_material.friction = friction
-	_contact_material.rough = true
-	_contact_material.bounce = bounce
+	if solid_body != null:
+		add_to_group("solid_slimes")
+		_excluded_bodies.append(solid_body.get_rid())
+		solid_outline.shape = ConvexPolygonShape2D.new()
 	
-	for index: int in POINT_COUNT:
-		var offset: Vector2 = Vector2.from_angle(TAU * index / POINT_COUNT) * radius
-		_rest_offsets.append(offset)
-		var point: RigidBody2D = RigidBody2D.new()
-		point.mass = total_mass / POINT_COUNT
-		point.collision_layer = 2
-		point.collision_mask = floor_mask
-		point.physics_material_override = _contact_material
-		point.lock_rotation = true
-		point.can_sleep = false
-		point.continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
-		point.position = offset
-		var collider: CollisionShape2D = CollisionShape2D.new()
-		collider.shape = _circle
-		point.add_child(collider)
-		add_child(point)
-		_points.append(point)
-	_center = global_position
+	for index: int in point_count:
+		_points.append(global_position + Vector2.from_angle(TAU * index / point_count) * radius)
+	_previous = _points.duplicate()
+	_clear_positions = _points.duplicate()
+	_rest_area = _signed_area()
+	_rest_edge = _points[0].distance_to(_points[1])
+	_update_solid_outline()
 
 
 func _physics_process(delta: float) -> void:
-	_update_motion()
-	_restore_shape()
-	_limit_rim_stretch(delta)
+	_update_collision_exclusions()
+	var direction: float = float(Input.is_physical_key_pressed(move_right_key)) - float(Input.is_physical_key_pressed(move_left_key))
+	_apply_contact_drive(direction, delta)
+	_sweep_starts = _points.duplicate()
+	_integrate(delta)
+	var strength: float = edge_strength
+	if Input.is_physical_key_pressed(edge_boost_key):
+		strength *= edge_boost_multiplier
+	var edge_passes: int = maxi(1, ceili(strength))
+	_solve_terrain()
+	for _pass: int in SOLVER_PASSES:
+		_sweep_starts = _points.duplicate()
+		for _edge_pass: int in edge_passes:
+			_solve_edges(strength / edge_passes)
+		_solve_area()
+		_solve_terrain()
+	_sweep_starts.clear()
+	_update_solid_outline()
 	queue_redraw()
 
 
 func _draw() -> void:
-	if _points.is_empty():
-		return
 	var outline: PackedVector2Array = PackedVector2Array()
-	for point: RigidBody2D in _points:
-		outline.append(point.position)
-	var expanded: Array[PackedVector2Array] = Geometry2D.offset_polygon(outline, _collider_radius - 1.5, Geometry2D.JOIN_ROUND)
-	if expanded.size() == 1 and not Geometry2D.triangulate_polygon(expanded[0]).is_empty():
-		outline = expanded[0]
+	for point: Vector2 in _points:
+		outline.append(to_local(point))
 	if Geometry2D.triangulate_polygon(outline).is_empty():
-		return
-	draw_colored_polygon(outline, Color("#77dc9d"))
-	var face: Vector2 = to_local(_center)
-	for eye_x: float in [-12.0, 12.0]:
-		var eye: Vector2 = face + Vector2(eye_x, -5.0)
-		draw_circle(eye, 6.0, Color("#f5fff5"), true, -1.0, true)
-		draw_circle(eye + Vector2(1.0, 0.5), 3.0, Color("#194836"), true, -1.0, true)
+		outline = _open_hull(outline)
+	if outline.size() >= 3:
+		draw_colored_polygon(outline, body_color)
 
 
 # -------------------------------- LOCAL FUNCTIONS ----------------------------------------
 
 
-func _update_size() -> void:
-	_collider_radius = radius * 0.22
-	_circle.radius = _collider_radius
-	for index: int in POINT_COUNT:
-		_rest_offsets[index] = Vector2.from_angle(TAU * index / POINT_COUNT) * radius
-
-
-func _update_motion() -> void:
-	_center = Vector2.ZERO
-	_velocity = Vector2.ZERO
-	for point: RigidBody2D in _points:
-		_center += point.global_position
-		_velocity += point.linear_velocity
-	_center /= POINT_COUNT
-	_velocity /= POINT_COUNT
+func _update_solid_outline() -> void:
+	if solid_outline == null:
+		return
+	var outline: PackedVector2Array = PackedVector2Array()
+	for point: Vector2 in _points:
+		outline.append(solid_outline.to_local(point))
+	var hull: PackedVector2Array = _open_hull(outline)
+	if hull.size() >= 3:
+		var convex: ConvexPolygonShape2D = solid_outline.shape as ConvexPolygonShape2D
+		convex.points = hull
 	
-	var angular_momentum: float = 0.0
-	var inertia: float = 0.0
-	for point: RigidBody2D in _points:
-		var offset: Vector2 = point.global_position - _center
-		angular_momentum += offset.cross(point.linear_velocity - _velocity)
-		inertia += offset.length_squared()
-	_angular_speed = angular_momentum / maxf(inertia, 1.0)
 
 
-func _restore_shape() -> void:
-	# Fit the resting ring to the current rotation before restoring its shape.
-	var alignment: Vector2 = Vector2.ZERO
-	for index: int in POINT_COUNT:
-		var offset: Vector2 = _points[index].global_position - _center
-		alignment += Vector2(_rest_offsets[index].dot(offset), _rest_offsets[index].cross(offset))
-	var rotation_angle: float = alignment.angle()
+func _open_hull(outline: PackedVector2Array) -> PackedVector2Array:
+	var hull: PackedVector2Array = Geometry2D.convex_hull(outline)
+	if hull.size() > 1 and hull[0] == hull[hull.size() - 1]:
+		hull.resize(hull.size() - 1)
+	return hull
+
+
+func _resample_ring() -> void:
+	var old_count: int = _points.size()
+	var points: PackedVector2Array = PackedVector2Array()
+	var previous: PackedVector2Array = PackedVector2Array()
+	for index: int in point_count:
+		var sample: float = float(index * old_count) / point_count
+		var first: int = floori(sample)
+		var second: int = (first + 1) % old_count
+		var blend: float = sample - first
+		points.append(_points[first].lerp(_points[second], blend))
+		previous.append(_previous[first].lerp(_previous[second], blend))
 	
-	for index: int in POINT_COUNT:
-		var point: RigidBody2D = _points[index]
-		var target: Vector2 = _center + _rest_offsets[index].rotated(rotation_angle)
-		var acceleration: Vector2 = (target - point.global_position) * shape_stiffness
-		var offset: Vector2 = point.global_position - _center
-		var spin_velocity: Vector2 = Vector2(-offset.y, offset.x) * _angular_speed
-		acceleration -= (point.linear_velocity - _velocity - spin_velocity) * shape_damping
-		point.apply_central_force(acceleration * point.mass)
+	_points = points
+	_previous = previous
+	_clear_positions = _points.duplicate()
+	_rest_edge = 2.0 * radius * sin(PI / point_count)
+	_rest_area = 0.5 * point_count * radius * radius * sin(TAU / point_count)
 
 
-func _limit_rim_stretch(delta: float) -> void:
-	var max_length: float = _rest_offsets[0].distance_to(_rest_offsets[1]) * 1.04
-	var predicted: PackedVector2Array = PackedVector2Array()
-	for point: RigidBody2D in _points:
-		predicted.append(point.global_position + point.linear_velocity * delta)
+func _apply_contact_drive(direction: float, delta: float) -> void:
+	if is_zero_approx(direction):
+		return
 	
-	# A slack link bends freely. A taut link pulls both neighbors equally.
-	var constrained: PackedVector2Array = predicted.duplicate()
-	for iteration: int in 16:
-		for index: int in POINT_COUNT:
-			var next: int = (index + 1) % POINT_COUNT
-			var edge: Vector2 = constrained[next] - constrained[index]
-			var length: float = edge.length()
-			if length > max_length:
-				var correction: Vector2 = edge * (0.5 * (length - max_length) / length)
-				constrained[index] += correction
-				constrained[next] -= correction
+	var space: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+	var reaction: Vector2 = Vector2.ZERO
+	for index: int in point_count:
+		var outward: Vector2 = _area_gradient(index).normalized()
+		if outward.is_zero_approx():
+			continue
+		var point: Vector2 = _points[index]
+		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(point, point + outward * 5.0, terrain_mask, _excluded_bodies)
+		var hit: Dictionary = space.intersect_ray(query)
+		if hit.is_empty():
+			continue
+		var surface_normal: Vector2 = hit.normal
+		var tangent: Vector2 = Vector2(-outward.y, outward.x).slide(surface_normal)
+		# Grip holds part of the backward tread motion against the surface.
+		var drive: Vector2 = tangent * direction * drive_acceleration * delta * delta
+		_previous[index] -= drive * 0.35
+		reaction -= drive / point_count
 	
-	for index: int in POINT_COUNT:
-		var point: RigidBody2D = _points[index]
-		var correction: Vector2 = constrained[index] - predicted[index]
-		point.apply_central_impulse(correction * (point.mass / delta))
+	for index: int in point_count:
+		_previous[index] -= reaction
 
 
-func _has_ground_contact() -> bool:
-	for point: RigidBody2D in _points:
-		var start: Vector2 = point.global_position
-		var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(start, start + Vector2.DOWN * (_collider_radius + 2.0), floor_mask)
-		var hit: Dictionary = get_world_2d().direct_space_state.intersect_ray(query)
-		if not hit.is_empty() and hit.normal.dot(Vector2.UP) > 0.45:
-			return true
-	return false
+func _area_gradient(index: int) -> Vector2:
+	var chord: Vector2 = _points[(index + 1) % point_count] - _points[posmod(index - 1, point_count)]
+	return Vector2(chord.y, -chord.x) * 0.5
+
+
+func _integrate(delta: float) -> void:
+	var gravity: Vector2 = _gravity_offset(delta)
+	for index: int in point_count:
+		var current: Vector2 = _points[index]
+		_points[index] += (current - _previous[index]) * 0.99 + gravity
+		_previous[index] = current
+
+
+func _gravity_offset(delta: float) -> Vector2:
+	var strength: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+	var direction: Vector2 = ProjectSettings.get_setting("physics/2d/default_gravity_vector")
+	return direction * strength * delta * delta
+
+
+func _signed_area() -> float:
+	var sum: float = 0.0
+	var origin: Vector2 = _points[0]
+	for index: int in point_count:
+		var a: Vector2 = _points[index] - origin
+		var b: Vector2 = _points[(index + 1) % point_count] - origin
+		sum += (a.y + b.y) * (a.x - b.x)
+	return sum * 0.5
+
+
+func _solve_area() -> void:
+	var gradients: PackedVector2Array = PackedVector2Array()
+	var weight: float = 0.0
+	for index: int in point_count:
+		var outward: Vector2 = _area_gradient(index)
+		gradients.append(outward)
+		weight += outward.length_squared()
+	if weight <= 0.001:
+		return
+	var pressure: float = (_rest_area - _signed_area()) / weight
+	for index: int in point_count:
+		var correction: Vector2 = gradients[index] * pressure
+		_points[index] += correction
+
+
+func _solve_edges(strength: float) -> void:
+	for index: int in point_count:
+		var next: int = (index + 1) % point_count
+		var edge: Vector2 = _points[next] - _points[index]
+		var length: float = edge.length()
+		if length > 0.001:
+			var correction: Vector2 = edge * (0.5 * strength * (length - _rest_edge) / length)
+			_points[index] += correction
+			_points[next] -= correction
+
+
+func _solve_terrain() -> void:
+	var space: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+	var overlap: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()
+	overlap.collision_mask = terrain_mask
+	overlap.exclude = _excluded_bodies
+	for index: int in point_count:
+		var start: Vector2 = _previous[index] if _sweep_starts.is_empty() else _sweep_starts[index]
+		var end: Vector2 = _points[index]
+		overlap.position = start
+		if not space.intersect_point(overlap, 1).is_empty():
+			start = _recover_contact(index, start, space, overlap)
+			# Recover on the same side before considering further movement.
+			end = start
+			_previous[index] = start
+		
+		if not start.is_equal_approx(end):
+			var hit: Dictionary = space.intersect_ray(PhysicsRayQueryParameters2D.create(start, end, terrain_mask, _excluded_bodies))
+			if not hit.is_empty():
+				var normal: Vector2 = hit.normal
+				end = hit.position + normal * 0.5
+				var velocity: Vector2 = end - _previous[index]
+				_previous[index] += normal * minf(velocity.dot(normal), 0.0)
+		
+		overlap.position = end
+		if not space.intersect_point(overlap, 1).is_empty():
+			end = start
+			overlap.position = end
+			if not space.intersect_point(overlap, 1).is_empty():
+				end = _recover_contact(index, end, space, overlap)
+			_previous[index] = end
+		_points[index] = end
+		overlap.position = end
+		if space.intersect_point(overlap, 1).is_empty():
+			_clear_positions[index] = end
+
+
+func _update_collision_exclusions() -> void:
+	_excluded_bodies.clear()
+	if solid_body != null:
+		_excluded_bodies.append(solid_body.get_rid())
+		solid_outline.shape = ConvexPolygonShape2D.new()
+	var center: Vector2 = get_center()
+	for other: VerletSlime in get_tree().get_nodes_in_group("solid_slimes"):
+		if other == self:
+			continue
+		# A smaller rider resolves contact against its support, without deforming the support in return.
+		var offset: Vector2 = other.get_center() - center
+		if other.radius < radius and offset.y < -radius * 0.35 and absf(offset.x) < -offset.y:
+			_excluded_bodies.append(other.solid_body.get_rid())
+
+
+func _recover_contact(index: int, point: Vector2, space: PhysicsDirectSpaceState2D, overlap: PhysicsPointQueryParameters2D) -> Vector2:
+	var anchor: Vector2 = _clear_positions[index]
+	overlap.position = anchor
+	if not space.intersect_point(overlap, 1).is_empty():
+		return _recover_point(point, space, overlap)
+	
+	var query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(anchor, point, terrain_mask, _excluded_bodies)
+	var hit: Dictionary = space.intersect_ray(query)
+	if hit.is_empty():
+		return anchor
+	var normal: Vector2 = hit.normal
+	var candidate: Vector2 = hit.position + normal * 0.5
+	overlap.position = candidate
+	return candidate if space.intersect_point(overlap, 1).is_empty() else anchor
+
+
+func _recover_point(point: Vector2, space: PhysicsDirectSpaceState2D, overlap: PhysicsPointQueryParameters2D) -> Vector2:
+	# Find open space, then sweep back to the nearest sampled surface.
+	var distance: float = 1.0
+	while distance <= 4096.0:
+		var best: Vector2 = point
+		var best_distance: float = INF
+		for index: int in 8:
+			var outside: Vector2 = point + Vector2.from_angle(TAU * index / 8) * distance
+			overlap.position = outside
+			if not space.intersect_point(overlap, 1).is_empty():
+				continue
+			var hit: Dictionary = space.intersect_ray(PhysicsRayQueryParameters2D.create(outside, point, terrain_mask, _excluded_bodies))
+			if hit.is_empty():
+				continue
+			var surface: Vector2 = hit.position
+			var normal: Vector2 = hit.normal
+			var candidate: Vector2 = surface + normal * 0.5
+			overlap.position = candidate
+			var separation: float = point.distance_squared_to(candidate)
+			if separation < best_distance and space.intersect_point(overlap, 1).is_empty():
+				best = candidate
+				best_distance = separation
+		if best_distance < INF:
+			return best
+		distance *= 2.0
+	return point
 
 
 # -------------------------------- EXTERNAL FUNCTIONS ----------------------------------------
 
 
-func steer(direction: float, speed: float) -> void:
-	var grounded: bool = _has_ground_contact()
-	var rolling_radius: float = radius + _collider_radius
-	var target: float = direction * speed * 3.0 / rolling_radius
-	var acceleration: float = clampf((target - _angular_speed) * 7.0, -65.0, 65.0)
-	if is_zero_approx(direction) or (grounded and _velocity.x * direction >= speed * 3.0):
-		# Rolling resistance scales with grip and fades near a stop.
-		acceleration = -clampf(_angular_speed * 4.0, -7.0, 7.0) * friction if grounded else 0.0
-	for point: RigidBody2D in _points:
-		var offset: Vector2 = point.global_position - _center
-		var tangent: Vector2 = Vector2(-offset.y, offset.x)
-		point.apply_central_force(tangent * acceleration * point.mass)
-
-
-func jump(speed: float) -> bool:
-	if not _has_ground_contact():
-		return false
-	for point: RigidBody2D in _points:
-		point.apply_central_impulse(Vector2.UP * speed * point.mass)
-	return true
-
-
 func get_center() -> Vector2:
-	return _center
-
-
+	var center: Vector2 = Vector2.ZERO
+	for point: Vector2 in _points:
+		center += point
+	return center / point_count
