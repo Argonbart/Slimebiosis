@@ -13,6 +13,7 @@ const SOLVER_PASSES: int = 8
 @export var body_color: Color = Color("#65d7bf")
 
 @export_category("Data")
+@export_range(0.0, 1500.0) var throw_strength: float = 420.0
 @export_range(8, 64) var point_count: int = 32:
 	set(value):
 		var count: int = clampi(value, 8, 64)
@@ -33,6 +34,8 @@ const SOLVER_PASSES: int = 8
 @export_flags_2d_physics var terrain_mask: int = 1
 
 var _held_slime: VerletSlime = null
+var _carry_spin: float = 0.0
+var _grab_indices: PackedInt32Array = PackedInt32Array()
 var _grab_offsets: PackedVector2Array = PackedVector2Array()
 var _holder: VerletSlime = null
 var _move_direction: float = 0.0
@@ -65,18 +68,17 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if is_instance_valid(_holder):
-		return
 	var carrying: bool = is_instance_valid(_held_slime)
+	var saved_points: PackedVector2Array = _points.duplicate() if carrying else PackedVector2Array()
 	_update_collision_exclusions()
 
 	_apply_contact_drive(_move_direction, delta)
 	_sweep_starts = _points.duplicate()
 	_integrate(delta)
-	var strength: float = edge_strength
-	var boosting: bool = _boosting
-	if boosting:
-		strength *= edge_boost_multiplier
+	if is_instance_valid(_holder):
+		_follow_holder(delta)
+	var strength: float = _effective_edge_strength()
+
 	var edge_passes: int = maxi(1, ceili(strength))
 	_solve_terrain()
 	for _pass: int in SOLVER_PASSES:
@@ -87,6 +89,15 @@ func _physics_process(delta: float) -> void:
 		_solve_terrain()
 	_sweep_starts.clear()
 	_update_solid_outline()
+	if carrying:
+		var center: Vector2 = get_center()
+		var angle: float = _ring_angle(center)
+		var previous_center: Vector2 = Vector2.ZERO
+		for point: Vector2 in saved_points:
+			previous_center += point
+		previous_center /= point_count
+		var previous_angle: float = _ring_angle(previous_center, saved_points)
+		_carry_spin = wrapf(angle - previous_angle, -PI, PI) / delta
 	queue_redraw()
 
 
@@ -98,9 +109,32 @@ func _draw() -> void:
 		outline = _open_hull(outline)
 	if outline.size() >= 3:
 		draw_colored_polygon(outline, body_color)
+		_draw_grab_glow(outline)
 
 
 # -------------------------------- LOCAL FUNCTIONS ----------------------------------------
+
+
+func _draw_grab_glow(outline: PackedVector2Array) -> void:
+	var held: VerletSlime = self if is_instance_valid(_holder) else _held_slime
+	if not is_instance_valid(held) or held._grab_indices.is_empty():
+		return
+	
+	var contact: Vector2 = Vector2.ZERO
+	for index: int in held._grab_indices:
+		contact += held._points[index]
+	contact = to_local(contact / held._grab_indices.size())
+	
+	for index: int in outline.size():
+		var start: Vector2 = outline[index]
+		var end: Vector2 = outline[(index + 1) % outline.size()]
+		var distance: float = start.lerp(end, 0.5).distance_to(contact)
+		var glow: float = 1.0 - smoothstep(8.0, 42.0, distance)
+		if glow <= 0.0:
+			continue
+		draw_line(start, end, Color(0.5, 1.0, 0.9, 0.12 * glow), 12.0, true)
+		draw_line(start, end, Color(0.6, 1.0, 0.92, 0.26 * glow), 7.0, true)
+		draw_line(start, end, Color(0.85, 1.0, 0.95, 0.95 * glow), 2.5, true)
 
 
 func _update_solid_outline() -> void:
@@ -138,9 +172,10 @@ func _resample_ring() -> void:
 	if is_instance_valid(_holder):
 		var center: Vector2 = _holder.get_center()
 		var angle: float = _holder._ring_angle(center)
-		_grab_offsets.clear()
-		for point: Vector2 in points:
-			_grab_offsets.append((point - center).rotated(-angle))
+		for slot: int in _grab_indices.size():
+			var index: int = roundi(float(_grab_indices[slot] * point_count) / old_count) % point_count
+			_grab_indices[slot] = index
+			_grab_offsets[slot] = (points[index] - center).rotated(-angle)
 	
 	_points = points
 	_previous = previous
@@ -219,21 +254,31 @@ func _solve_area() -> void:
 		_points[index] += correction
 
 
-func _ring_angle(center: Vector2) -> float:
+func _ring_angle(center: Vector2, ring: PackedVector2Array = PackedVector2Array()) -> float:
+	if ring.is_empty():
+		ring = _points
 	var alignment: Vector2 = Vector2.ZERO
 	for index: int in point_count:
 		var rest: Vector2 = Vector2.from_angle(TAU * index / point_count)
-		var offset: Vector2 = _points[index] - center
+		var offset: Vector2 = ring[index] - center
 		alignment += Vector2(rest.dot(offset), rest.cross(offset))
 	return alignment.angle()
 
 
-func _carry_with(center: Vector2, angle: float) -> void:
-	for index: int in point_count:
-		_points[index] = center + _grab_offsets[index].rotated(angle)
-	_previous = _points.duplicate()
-	_update_solid_outline()
-	queue_redraw()
+func _effective_edge_strength() -> float:
+	if is_instance_valid(_holder):
+		return 1.0
+	return edge_strength * edge_boost_multiplier if _boosting else edge_strength
+
+
+func _follow_holder(delta: float) -> void:
+	var center: Vector2 = _holder.get_center()
+	var angle: float = _holder._ring_angle(center)
+	var response: float = 1.0 - exp(-12.0 * delta)
+	for slot: int in _grab_indices.size():
+		var index: int = _grab_indices[slot]
+		var target: Vector2 = center + _grab_offsets[slot].rotated(angle)
+		_points[index] = _points[index].lerp(target, response)
 
 
 func _restore_roundness(strength: float) -> void:
@@ -302,9 +347,9 @@ func _update_collision_exclusions() -> void:
 	_excluded_bodies.clear()
 	if solid_body != null:
 		_excluded_bodies.append(solid_body.get_rid())
-	for partner: VerletSlime in [_holder, _held_slime]:
-		if is_instance_valid(partner) and partner.solid_body != null:
-			_excluded_bodies.append(partner.solid_body.get_rid())
+	# The held slime resolves contact against the grabber.
+	if is_instance_valid(_held_slime) and _held_slime.solid_body != null:
+		_excluded_bodies.append(_held_slime.solid_body.get_rid())
 	var center: Vector2 = get_center()
 	for other: VerletSlime in get_tree().get_nodes_in_group("solid_slimes"):
 		if other == self or other == _holder or other == _held_slime:
@@ -364,7 +409,14 @@ func _recover_point(point: Vector2, space: PhysicsDirectSpaceState2D, overlap: P
 
 func toggle_grab(target: VerletSlime) -> void:
 	if is_instance_valid(_held_slime):
-		_held_slime._previous = _held_slime._points.duplicate()
+		var offset: Vector2 = _held_slime.get_center() - get_center()
+		var tangent: Vector2 = Vector2(-offset.y, offset.x)
+		var launch_velocity: Vector2 = offset.normalized() * throw_strength + tangent * _carry_spin
+		var displacement: Vector2 = launch_velocity * get_physics_process_delta_time()
+		for index: int in _held_slime.point_count:
+			var point: Vector2 = _held_slime._points[index]
+			_held_slime._previous[index] = point - displacement
+			_held_slime._clear_positions[index] = point
 		_held_slime._holder = null
 		_held_slime = null
 		return
@@ -373,18 +425,27 @@ func toggle_grab(target: VerletSlime) -> void:
 	if is_instance_valid(target._holder) or is_instance_valid(target._held_slime):
 		return
 	
-	var reach: float = 18.0
-	for point: Vector2 in _points:
-		for target_point: Vector2 in target._points:
-			if point.distance_squared_to(target_point) <= reach * reach:
-				_held_slime = target
-				target._holder = self
-				var center: Vector2 = get_center()
-				var angle: float = _ring_angle(center)
-				target._grab_offsets.clear()
-				for held_point: Vector2 in target._points:
-					target._grab_offsets.append((held_point - center).rotated(-angle))
-				return
+	_update_collision_exclusions()
+	
+	var reach: float = 2.0
+	var center: Vector2 = get_center()
+	var angle: float = _ring_angle(center)
+	var hull: PackedVector2Array = _open_hull(_points)
+	target._grab_indices.clear()
+	target._grab_offsets.clear()
+	for index: int in target.point_count:
+		var point: Vector2 = target._points[index]
+		for edge: int in hull.size():
+			var closest: Vector2 = Geometry2D.get_closest_point_to_segment(point, hull[edge], hull[(edge + 1) % hull.size()])
+			if point.distance_squared_to(closest) <= reach * reach:
+				target._grab_indices.append(index)
+				target._grab_offsets.append((point - center).rotated(-angle))
+				break
+	
+	if not target._grab_indices.is_empty():
+		_carry_spin = 0.0
+		_held_slime = target
+		target._holder = self
 
 
 func set_controls(direction: float, boosting: bool) -> void:

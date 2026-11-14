@@ -54,6 +54,7 @@ func _build_debug_menu() -> void:
 	panel.add_child(rows)
 	_add_slider(rows, "Point count", "point_count", 8.0, 64.0, 1.0, "More points give the edge finer contact with terrain and cost more to simulate.")
 	_add_slider(rows, "Movement speed", "drive_acceleration", 0.0, 5000.0, 50.0, "Higher values push harder against surfaces and build rolling speed faster.")
+	_add_slider(rows, "Throw strength", "throw_strength", 0.0, 1500.0, 10.0, "Launch speed when you release a grabbed slime with E.")
 	_add_slider(rows, "Size", "radius", 12.0, 100.0, 1.0, "Changes the target radius and area.")
 	_add_slider(rows, "Edge stiffness", "edge_strength", 0.0, 1.0, 0.01, "Higher values keep neighboring points closer to their resting distance.")
 	_add_slider(rows, "Edge boost (W)", "edge_boost_multiplier", 0.01, 50.0, 0.1, "Multiplies edge stiffness while you hold W.")
